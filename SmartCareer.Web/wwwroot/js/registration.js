@@ -11,6 +11,7 @@
         const list = document.getElementById(input.getAttribute("aria-controls"));
         let items = [];
         let activeIndex = -1;
+        let searchVersion = 0;
 
         const close = () => {
             items = [];
@@ -36,7 +37,7 @@
                 option.type = "button";
                 option.id = `${list.id}-option-${index}`;
                 option.className = "autocomplete-option";
-                option.role = "option";
+                option.setAttribute("role", "option");
                 option.textContent = suggestion.label;
                 option.addEventListener("mousedown", (event) => event.preventDefault());
                 option.addEventListener("click", () => select(index));
@@ -46,13 +47,17 @@
         };
 
         const search = debounce(async () => {
+            const version = searchVersion;
             const query = input.value.trim();
             if (query.length < 2) return close();
             try {
                 const response = await fetch(`${input.dataset.autocompleteUrl}?q=${encodeURIComponent(query)}`, {
                     headers: { Accept: "application/json" }
                 });
-                if (response.ok) render(await response.json());
+                if (response.ok) {
+                    const suggestions = await response.json();
+                    if (version === searchVersion) render(suggestions);
+                }
             }
             catch
             {
@@ -60,7 +65,10 @@
             }
         }, 250);
 
-        input.addEventListener("input", search);
+        input.addEventListener("input", () => {
+            searchVersion++;
+            search();
+        });
         input.addEventListener("keydown", (event) => {
             if (!items.length) return;
             if (event.key === "ArrowDown" || event.key === "ArrowUp") {
