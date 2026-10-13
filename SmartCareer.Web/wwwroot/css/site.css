@@ -21,6 +21,72 @@ body {
   margin-bottom: 60px;
 }
 
+.autocomplete-list {
+  position: absolute;
+  z-index: 1050;
+  width: 100%;
+  max-height: 19rem;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #ced4da;
+  border-radius: 0 0 .5rem .5rem;
+  box-shadow: 0 .5rem 1rem rgba(15, 23, 42, .12);
+}
+
+.autocomplete-list:empty {
+  display: none;
+}
+
+.autocomplete-option {
+  display: block;
+  width: 100%;
+  padding: .65rem .8rem;
+  border: 0;
+  border-bottom: 1px solid #eef2f7;
+  background: #fff;
+  color: #0f172a;
+  text-align: left;
+}
+
+.autocomplete-option:hover,
+.autocomplete-option[aria-selected="true"] {
+  background: #eaf2ff;
+}
+
+.form-floating:has(.autocomplete-list) {
+  position: relative;
+}
+
+.password-requirements {
+  padding-left: 1.25rem;
+  color: #6c757d;
+  font-size: .875rem;
+}
+
+.password-requirements li.is-valid {
+  color: #198754;
+}
+
+.password-requirements li.is-valid::marker {
+  content: "✓  ";
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin: 1rem 0;
+  color: #6c757d;
+  font-size: .875rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid #dee2e6;
+}
+
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
   color: var(--bs-secondary-color);
   text-align: end;

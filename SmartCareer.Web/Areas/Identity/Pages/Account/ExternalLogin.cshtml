@@ -1,0 +1,51 @@
+@page
+@model SmartCareer.Web.Areas.Identity.Pages.Account.ExternalLoginModel
+@{
+    ViewData["Title"] = "Complete registration";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7 col-xl-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4 p-md-5">
+                <h1 class="h3">Complete your student profile</h1>
+                <p class="text-muted">Google verified your identity. Add the information needed for your Smart Career account.</p>
+                <form method="post" asp-page-handler="Confirmation" asp-route-returnUrl="@Model.ReturnUrl">
+                    <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="Input.Email" class="form-control" readonly />
+                        <label asp-for="Input.Email"></label>
+                        <span asp-validation-for="Input.Email" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="Input.FullName" class="form-control" autocomplete="name" placeholder="Full name" />
+                        <label asp-for="Input.FullName"></label>
+                        <span asp-validation-for="Input.FullName" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="Input.University" class="form-control" autocomplete="off" placeholder="University"
+                               data-autocomplete-url="/api/registration-options/universities" aria-autocomplete="list"
+                               aria-controls="external-university-suggestions" aria-expanded="false" role="combobox" />
+                        <label asp-for="Input.University"></label>
+                        <div id="external-university-suggestions" class="autocomplete-list" role="listbox"></div>
+                        <span asp-validation-for="Input.University" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-4">
+                        <input asp-for="Input.Course" class="form-control" autocomplete="off" placeholder="Course"
+                               data-autocomplete-url="/api/registration-options/courses" aria-autocomplete="list"
+                               aria-controls="external-course-suggestions" aria-expanded="false" role="combobox" />
+                        <label asp-for="Input.Course"></label>
+                        <div id="external-course-suggestions" class="autocomplete-list" role="listbox"></div>
+                        <span asp-validation-for="Input.Course" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Create student account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/registration.js" asp-append-version="true"></script>
+}
