@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using SmartCareer.Web.Models;
 using SmartCareer.Web.Services;
+using SmartCareer.Web.ViewModels;
 
 namespace SmartCareer.Web.Areas.Identity.Pages.Account;
 
@@ -15,6 +16,7 @@ public class ExternalLoginModel(
     UserManager<ApplicationUser> userManager,
     IUserStore<ApplicationUser> userStore,
     StudentAccountService studentAccountService,
+    StudentDetailsValidator detailsValidator,
     ILogger<ExternalLoginModel> logger) : PageModel
 {
     [BindProperty]
@@ -26,20 +28,11 @@ public class ExternalLoginModel(
     [TempData]
     public string? ErrorMessage { get; set; }
 
-    public sealed class InputModel
+    public sealed class InputModel : StudentDetailsInputModel
     {
         [Required, EmailAddress, StringLength(256)]
         public string Email { get; set; } = string.Empty;
 
-        [Required, StringLength(100, MinimumLength = 2)]
-        [Display(Name = "Full name")]
-        public string FullName { get; set; } = string.Empty;
-
-        [Required, StringLength(150, MinimumLength = 2)]
-        public string University { get; set; } = string.Empty;
-
-        [Required, StringLength(150, MinimumLength = 2)]
-        public string Course { get; set; } = string.Empty;
     }
 
     public IActionResult OnGet() => RedirectToPage("./Login");
@@ -101,6 +94,8 @@ public class ExternalLoginModel(
             ModelState.AddModelError(nameof(Input.Email), "The email must match the verified Google account email.");
         }
 
+        detailsValidator.ValidateAndNormalize(Input, ModelState, nameof(Input));
+
         if (!ModelState.IsValid)
         {
             return Page();
@@ -118,8 +113,9 @@ public class ExternalLoginModel(
         var user = new ApplicationUser
         {
             FullName = Input.FullName.Trim(),
-            University = Input.University.Trim(),
-            Course = Input.Course.Trim(),
+            University = Input.University,
+            Course = Input.Course,
+            EducationLevel = Input.EducationLevel,
             CreatedAt = DateTime.UtcNow
         };
         await userStore.SetUserNameAsync(user, Input.Email.Trim(), CancellationToken.None);

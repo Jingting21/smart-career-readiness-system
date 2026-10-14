@@ -1,51 +1,10 @@
 @page
 @model SmartCareer.Web.Areas.Identity.Pages.Account.ExternalLoginModel
-@{
-    ViewData["Title"] = "Complete registration";
-}
-
-<div class="row justify-content-center">
-    <div class="col-lg-7 col-xl-6">
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-4 p-md-5">
-                <h1 class="h3">Complete your student profile</h1>
-                <p class="text-muted">Google verified your identity. Add the information needed for your Smart Career account.</p>
-                <form method="post" asp-page-handler="Confirmation" asp-route-returnUrl="@Model.ReturnUrl">
-                    <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-                    <div class="form-floating mb-3">
-                        <input asp-for="Input.Email" class="form-control" readonly />
-                        <label asp-for="Input.Email"></label>
-                        <span asp-validation-for="Input.Email" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating mb-3">
-                        <input asp-for="Input.FullName" class="form-control" autocomplete="name" placeholder="Full name" />
-                        <label asp-for="Input.FullName"></label>
-                        <span asp-validation-for="Input.FullName" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating mb-3">
-                        <input asp-for="Input.University" class="form-control" autocomplete="off" placeholder="University"
-                               data-autocomplete-url="/api/registration-options/universities" aria-autocomplete="list"
-                               aria-controls="external-university-suggestions" aria-expanded="false" role="combobox" />
-                        <label asp-for="Input.University"></label>
-                        <div id="external-university-suggestions" class="autocomplete-list" role="listbox"></div>
-                        <span asp-validation-for="Input.University" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating mb-4">
-                        <input asp-for="Input.Course" class="form-control" autocomplete="off" placeholder="Course"
-                               data-autocomplete-url="/api/registration-options/courses" aria-autocomplete="list"
-                               aria-controls="external-course-suggestions" aria-expanded="false" role="combobox" />
-                        <label asp-for="Input.Course"></label>
-                        <div id="external-course-suggestions" class="autocomplete-list" role="listbox"></div>
-                        <span asp-validation-for="Input.Course" class="text-danger"></span>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">Create student account</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-    <script src="~/js/registration.js" asp-append-version="true"></script>
-}
+@using SmartCareer.Web.Models
+@{ ViewData["Title"] = "Complete registration"; }
+<section class="auth-page"><div class="container"><div class="auth-card external-card"><div class="auth-heading"><span class="brand-mark">S</span><div><h1>Complete your student profile</h1><p>Google verified your identity. Add your education information to finish.</p></div></div><form method="post" asp-page-handler="Confirmation" asp-route-returnUrl="@Model.ReturnUrl" data-validation-focus data-server-validation-errors="@((!ViewData.ModelState.IsValid).ToString().ToLowerInvariant())"><div asp-validation-summary="All" class="validation-summary" role="alert"></div><div class="profile-form-grid">
+<div class="field-group"><label asp-for="Input.Email"></label><input asp-for="Input.Email" class="form-control readonly-field" readonly /><span asp-validation-for="Input.Email" class="text-danger"></span></div><div class="field-group"><label asp-for="Input.FullName"></label><input asp-for="Input.FullName" class="form-control" /><span asp-validation-for="Input.FullName" class="text-danger"></span></div>
+<div class="field-group selection-field" data-controlled-selection><label asp-for="Input.University"></label><input asp-for="Input.UniversitySelectionMode" type="hidden" data-selection-mode /><input asp-for="Input.UniversityConfirmed" type="hidden" data-selection-confirmed /><div data-catalog-field><input asp-for="Input.University" class="form-control" data-autocomplete-url="/api/registration-options/universities" data-val-catalogselection="Please select a university from the suggestions or choose Other — Enter manually." aria-controls="external-university-suggestions" aria-expanded="false" role="combobox" /><div id="external-university-suggestions" class="autocomplete-list"></div><span asp-validation-for="Input.University" class="text-danger"></span></div><div data-custom-field><input asp-for="Input.CustomUniversity" class="form-control" placeholder="Enter university name" data-rule-manualentry="university" /><small class="field-help">Saved as manually entered and unverified.</small><span asp-validation-for="Input.CustomUniversity" class="text-danger"></span></div><button type="button" class="selection-switch" data-selection-switch></button></div>
+<div class="field-group selection-field" data-controlled-selection><label asp-for="Input.Course"></label><input asp-for="Input.CourseSelectionMode" type="hidden" data-selection-mode /><input asp-for="Input.CourseConfirmed" type="hidden" data-selection-confirmed /><div data-catalog-field><input asp-for="Input.Course" class="form-control" data-autocomplete-url="/api/registration-options/courses" data-val-catalogselection="Please select a course from the suggestions or choose Other — Enter manually." aria-controls="external-course-suggestions" aria-expanded="false" role="combobox" /><div id="external-course-suggestions" class="autocomplete-list"></div><span asp-validation-for="Input.Course" class="text-danger"></span></div><div data-custom-field><input asp-for="Input.CustomCourse" class="form-control" placeholder="Enter course name" data-rule-manualentry="course" /><small class="field-help">Saved as manually entered and unverified.</small><span asp-validation-for="Input.CustomCourse" class="text-danger"></span></div><button type="button" class="selection-switch" data-selection-switch></button></div>
+<div class="field-group"><label asp-for="Input.EducationLevel"></label><select asp-for="Input.EducationLevel" asp-items="Html.GetEnumSelectList<EducationLevel>()" class="form-select"><option value="">Choose a level</option></select><span asp-validation-for="Input.EducationLevel" class="text-danger"></span></div></div><button type="submit" class="btn btn-primary w-100">Create student account</button></form></div></div></section>
+@section Scripts { <partial name="_ValidationScriptsPartial" /><script src="~/js/student-details-validation.js" asp-append-version="true"></script><script src="~/js/autocomplete.js" asp-append-version="true"></script><script src="~/js/form-validation-focus.js" asp-append-version="true"></script> }

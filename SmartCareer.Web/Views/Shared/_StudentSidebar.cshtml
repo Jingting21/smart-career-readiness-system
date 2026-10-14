@@ -1,7 +1,7 @@
 @{ var action = ViewContext.RouteData.Values["action"]?.ToString(); }
 <aside id="app-sidebar" class="app-sidebar" aria-label="Student navigation"><nav>
     <a class="sidebar-link @(action == "Dashboard" ? "active" : "")" asp-controller="Home" asp-action="Dashboard"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a>
-    <a class="sidebar-link" asp-controller="Home" asp-action="ComingSoon" asp-route-feature="My Profile"><span class="nav-icon" aria-hidden="true">○</span><span>My Profile</span><span class="soon-pill">Soon</span></a>
+    <a class="sidebar-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Profile" ? "active" : "")" asp-controller="Profile" asp-action="Index"><span class="nav-icon" aria-hidden="true">○</span><span>My Profile</span></a>
     <a class="sidebar-link" asp-controller="Home" asp-action="ComingSoon" asp-route-feature="Skills & Interests"><span class="nav-icon" aria-hidden="true">◇</span><span>Skills &amp; Interests</span><span class="soon-pill">Soon</span></a>
     <a class="sidebar-link" asp-controller="Home" asp-action="ComingSoon" asp-route-feature="Career Explorer"><span class="nav-icon" aria-hidden="true">⌕</span><span>Career Explorer</span><span class="soon-pill">Soon</span></a>
     <a class="sidebar-link" asp-controller="Home" asp-action="ComingSoon" asp-route-feature="Career Readiness"><span class="nav-icon" aria-hidden="true">✓</span><span>Career Readiness</span><span class="soon-pill">Soon</span></a>

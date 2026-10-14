@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using SmartCareer.Web.Models;
+using SmartCareer.Web.Security;
 using SmartCareer.Web.Services;
+using SmartCareer.Web.ViewModels;
 
 namespace SmartCareer.Web.Areas.Identity.Pages.Account;
 
@@ -15,6 +17,7 @@ public class RegisterModel(
     IUserStore<ApplicationUser> userStore,
     SignInManager<ApplicationUser> signInManager,
     StudentAccountService studentAccountService,
+    StudentDetailsValidator detailsValidator,
     ILogger<RegisterModel> logger) : PageModel
 {
     [BindProperty]
@@ -24,21 +27,10 @@ public class RegisterModel(
 
     public IList<AuthenticationScheme> ExternalLogins { get; set; } = [];
 
-    public sealed class InputModel
+    public bool ShowPasswordReentryNotice { get; private set; }
+
+    public sealed class InputModel : StudentDetailsInputModel
     {
-        [Required]
-        [StringLength(100, MinimumLength = 2)]
-        [Display(Name = "Full name")]
-        public string FullName { get; set; } = string.Empty;
-
-        [Required]
-        [StringLength(150, MinimumLength = 2)]
-        public string University { get; set; } = string.Empty;
-
-        [Required]
-        [StringLength(150, MinimumLength = 2)]
-        public string Course { get; set; } = string.Empty;
-
         [Required]
         [EmailAddress]
         [StringLength(256)]
@@ -65,16 +57,19 @@ public class RegisterModel(
     {
         returnUrl ??= Url.Content("~/");
         ExternalLogins = (await signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+        detailsValidator.ValidateAndNormalize(Input, ModelState, nameof(Input));
         if (!ModelState.IsValid)
         {
+            PrepareInvalidRegistration();
             return Page();
         }
 
         var user = new ApplicationUser
         {
             FullName = Input.FullName.Trim(),
-            University = Input.University.Trim(),
-            Course = Input.Course.Trim(),
+            University = Input.University,
+            Course = Input.Course,
+            EducationLevel = Input.EducationLevel,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -90,11 +85,9 @@ public class RegisterModel(
             return LocalRedirect(returnUrl);
         }
 
-        foreach (var error in result.Errors)
-        {
-            ModelState.AddModelError(string.Empty, error.Description);
-        }
+        RegistrationIdentityErrorMapper.AddToModelState(ModelState, result.Errors);
 
+        PrepareInvalidRegistration();
         return Page();
     }
 
@@ -120,4 +113,14 @@ public class RegisterModel(
 
         return (IUserEmailStore<ApplicationUser>)userStore;
     }
+
+    private void PrepareInvalidRegistration()
+    {
+        ShowPasswordReentryNotice = true;
+        SensitiveModelStateCleaner.ClearAttemptedValue(ModelState, "Input.Password");
+        SensitiveModelStateCleaner.ClearAttemptedValue(ModelState, "Input.ConfirmPassword");
+        Input.Password = string.Empty;
+        Input.ConfirmPassword = string.Empty;
+    }
+
 }

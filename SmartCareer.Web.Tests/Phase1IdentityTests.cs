@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,7 +31,7 @@ public sealed class Phase1IdentityTests
 
         Assert.Contains(results, result => result.MemberNames.Contains(nameof(input.FullName)));
         Assert.Contains(results, result => result.MemberNames.Contains(nameof(input.University)));
-        Assert.Contains(results, result => result.MemberNames.Contains(nameof(input.Course)));
+        Assert.Contains(results, result => result.MemberNames.Contains(nameof(input.EducationLevel)));
         Assert.Contains(results, result => result.MemberNames.Contains(nameof(input.Email)));
         Assert.Contains(results, result => result.MemberNames.Contains(nameof(input.Password)));
         Assert.Contains(results, result => result.MemberNames.Contains(nameof(input.ConfirmPassword)));
@@ -51,6 +52,59 @@ public sealed class Phase1IdentityTests
         Assert.True(result.Succeeded);
         Assert.True(await userManager.IsInRoleAsync(user, AppRoles.Student));
         Assert.False(await userManager.IsInRoleAsync(user, AppRoles.Administrator));
+    }
+
+    [Fact]
+    public async Task DuplicateEmailIdentityErrorsAreConsolidatedOnTheEmailField()
+    {
+        await using var provider = CreateProvider();
+        using var scope = provider.CreateScope();
+        await scope.ServiceProvider.GetRequiredService<IdentityDataInitializer>().InitializeAsync();
+        var service = scope.ServiceProvider.GetRequiredService<StudentAccountService>();
+        Assert.True((await service.CreateAsync(NewUser("duplicate@example.test"), "Valid#Pass1")).Succeeded);
+
+        var result = await service.CreateAsync(NewUser("DUPLICATE@example.test"), "Valid#Pass1");
+        var state = new ModelStateDictionary();
+        RegistrationIdentityErrorMapper.AddToModelState(state, result.Errors);
+
+        Assert.False(result.Succeeded);
+        var error = Assert.Single(state["Input.Email"]!.Errors);
+        Assert.Equal(RegistrationIdentityErrorMapper.DuplicateEmailMessage, error.ErrorMessage);
+        Assert.False(state.ContainsKey(string.Empty));
+    }
+
+    [Fact]
+    public void DuplicateUsernameAndEmailCollapseButOtherIdentityErrorsRemain()
+    {
+        var state = new ModelStateDictionary();
+        RegistrationIdentityErrorMapper.AddToModelState(state,
+        [
+            new IdentityError { Code = "DuplicateUserName", Description = "Username duplicate." },
+            new IdentityError { Code = "DuplicateEmail", Description = "Email duplicate." },
+            new IdentityError { Code = "PasswordRequiresDigit", Description = "Passwords must have a digit." },
+            new IdentityError { Code = "StoreFailure", Description = "Account could not be created." }
+        ]);
+
+        Assert.Single(state["Input.Email"]!.Errors);
+        Assert.Equal("Passwords must have a digit.", Assert.Single(state["Input.Password"]!.Errors).ErrorMessage);
+        Assert.Equal("Account could not be created.", Assert.Single(state[string.Empty]!.Errors).ErrorMessage);
+    }
+
+    [Fact]
+    public void PasswordReentryNoticeIsConditionalNeutralAndDismissedOnInput()
+    {
+        var root = FindWebProjectRoot();
+        var view = File.ReadAllText(Path.Combine(root, "Areas/Identity/Pages/Account/Register.cshtml"));
+        var css = File.ReadAllText(Path.Combine(root, "wwwroot/css/site.css"));
+        var script = File.ReadAllText(Path.Combine(root, "wwwroot/js/registration.js"));
+
+        Assert.Contains("@if (Model.ShowPasswordReentryNotice)", view);
+        Assert.Contains("data-password-reentry-notice", view);
+        Assert.Contains("Please re-enter your password to complete registration.", view);
+        Assert.DoesNotContain("profile-alert", view);
+        Assert.Contains(".password-reentry-notice", css);
+        Assert.Contains("#eff6ff", css);
+        Assert.Contains("[data-password-reentry-notice]", script);
     }
 
     [Fact]
@@ -132,5 +186,15 @@ public sealed class Phase1IdentityTests
         var results = new List<ValidationResult>();
         Validator.TryValidateObject(model, new ValidationContext(model), results, validateAllProperties: true);
         return results;
+    }
+
+    private static string FindWebProjectRoot()
+    {
+        for (var directory = new DirectoryInfo(Directory.GetCurrentDirectory()); directory is not null; directory = directory.Parent)
+        {
+            var candidate = Path.Combine(directory.FullName, "SmartCareer.Web");
+            if (File.Exists(Path.Combine(candidate, "SmartCareer.Web.csproj"))) return candidate;
+        }
+        throw new DirectoryNotFoundException("Could not locate the SmartCareer.Web project root.");
     }
 }

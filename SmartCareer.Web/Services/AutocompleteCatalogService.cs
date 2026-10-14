@@ -26,6 +26,34 @@ public sealed class AutocompleteCatalogService
     public IReadOnlyList<Suggestion> SearchCourses(string? query) =>
         Search(courses, query, prioritiseMalaysia: false, penaliseSubUnits: false);
 
+    public bool TryResolveUniversity(string? value, out string canonical) => TryResolve(universities, value, out canonical);
+    public bool TryResolveCourse(string? value, out string canonical) => TryResolve(courses, value, out canonical);
+
+    public bool IsMalformedCustomUniversity(string value) => IsRecognisedNameWithAppendedDigits(universities, value);
+    public bool IsMalformedCustomCourse(string value) => IsRecognisedNameWithAppendedDigits(courses, value);
+    public string? FindSimilarUniversity(string value) => SearchUniversities(value).FirstOrDefault()?.Value;
+    public string? FindSimilarCourse(string value) => SearchCourses(value).FirstOrDefault()?.Value;
+
+    private static bool TryResolve(IEnumerable<CatalogItem> source, string? value, out string canonical)
+    {
+        var term = Normalize(value);
+        var item = source.FirstOrDefault(candidate => candidate.SearchTerms.Any(searchTerm => Normalize(searchTerm) == term));
+        canonical = item?.Name ?? string.Empty;
+        return item is not null;
+    }
+
+    private static bool IsRecognisedNameWithAppendedDigits(IEnumerable<CatalogItem> source, string value)
+    {
+        var match = System.Text.RegularExpressions.Regex.Match(value.Trim(), @"^(?<base>.+?)(?<digits>\p{Nd}+)$");
+        var trimmed = value.Trim();
+        if (!match.Success || char.IsWhiteSpace(trimmed[trimmed.Length - match.Groups["digits"].Value.Length - 1])) return false;
+        var baseName = LooseNormalize(match.Groups["base"].Value);
+        return source.Any(item => item.SearchTerms.Any(term => LooseNormalize(term) == baseName));
+    }
+
+    private static string LooseNormalize(string value) =>
+        string.Join(' ', Normalize(value).Split(' ', StringSplitOptions.RemoveEmptyEntries).Where(token => token != "S"));
+
     private static CatalogItem[] Load(string path)
     {
         using var stream = File.OpenRead(path);

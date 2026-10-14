@@ -47,6 +47,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddScoped<IdentityDataInitializer>();
 builder.Services.AddScoped<StudentAccountService>();
 builder.Services.AddSingleton<AutocompleteCatalogService>();
+builder.Services.AddScoped<StudentDetailsValidator>();
 
 var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
 var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
