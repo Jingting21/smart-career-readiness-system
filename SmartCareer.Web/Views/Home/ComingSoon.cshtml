@@ -1,0 +1,2 @@
+@{ var feature = ViewData["Feature"]?.ToString() ?? "This feature"; ViewData["Title"] = feature; }
+<div class="empty-state"><span class="feature-icon">↗</span><span class="status-label">Coming soon</span><h1>@feature is on the way.</h1><p>We’re preparing this part of your career journey. No results or progress have been generated yet.</p><a class="btn btn-primary" asp-controller="Home" asp-action="Dashboard">Back to dashboard</a></div>

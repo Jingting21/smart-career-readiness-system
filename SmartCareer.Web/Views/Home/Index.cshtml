@@ -1,8 +1,23 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
-}
+@{ ViewData["Title"] = "Career direction for university students"; }
+<section class="hero"><div class="container hero-grid"><div class="hero-copy reveal">
+    <span class="eyebrow">Your future, with clearer direction</span><h1>Not sure what’s next? <span>Let’s find your path.</span></h1>
+    <p>Discover careers that fit you, understand your strengths, and take your next step with confidence.</p>
+    <div class="hero-actions"><a class="btn btn-primary btn-lg" asp-area="Identity" asp-page="/Account/Register" asp-route-returnUrl="/Home/Dashboard">Get started <span aria-hidden="true">→</span></a><a class="btn btn-soft btn-lg" href="#features">Explore features</a></div>
+    <div class="trust-row"><span>✓ Designed for university students</span><span>✓ Clear, practical guidance</span></div>
+    </div><div class="hero-visual reveal"><img src="~/images/smartcareer-students-hero.png" asp-append-version="true" width="1536" height="1024" alt="A diverse group of university students planning together around a laptop" fetchpriority="high" /><div class="floating-note"><span class="note-icon">↗</span><div><strong>Build with purpose</strong><small>Turn uncertainty into your next step.</small></div></div></div></div></section>
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section id="features" class="section features-section"><div class="container"><div class="section-heading"><span class="eyebrow">A clearer way forward</span><h2>Everything starts with understanding where you are.</h2><p>SmartCareer brings your self-discovery and career preparation journey into one calm, supportive space.</p></div>
+<div class="feature-grid">
+    <article class="feature-card"><span class="feature-icon">◇</span><span class="status-label available">Available at launch</span><h3>Discover Yourself</h3><p>Build your student profile and bring your interests, studies, and aspirations together.</p></article>
+    <article class="feature-card"><span class="feature-icon">⌕</span><span class="status-label">Coming soon</span><h3>Explore Career Possibilities</h3><p>Explore careers that may align with your profile when recommendations become available.</p></article>
+    <article class="feature-card"><span class="feature-icon">✓</span><span class="status-label">Coming soon</span><h3>Understand Your Readiness</h3><p>See a clear view of strengths and growth areas through future readiness tools.</p></article>
+    <article class="feature-card"><span class="feature-icon">↗</span><span class="status-label">Coming soon</span><h3>Build Your Career Roadmap</h3><p>Turn goals into practical development steps through a future personalised roadmap.</p></article>
+</div></div></section>
+
+<section class="section journey-section"><div class="container"><div class="section-heading centered"><span class="eyebrow">How it works</span><h2>Your journey, made easier to navigate.</h2><p>Move from self-discovery to purposeful action through five simple stages.</p></div><ol class="journey-flow">
+    <li><span>01</span><strong>Create your profile</strong><small>Tell us where you are today.</small></li><li><span>02</span><strong>Discover your strengths</strong><small>Reflect on what makes you, you.</small></li><li><span>03</span><strong>Explore careers</strong><small>See paths worth considering.</small></li><li><span>04</span><strong>Understand readiness</strong><small>Know what to build next.</small></li><li><span>05</span><strong>Shape your roadmap</strong><small>Move ahead with purpose.</small></li>
+</ol></div></section>
+
+<section id="about" class="section about-section"><div class="container about-grid"><div class="about-card"><span class="quote-mark">“</span><p>Your future is a journey. SmartCareer helps you discover your direction and prepare for what comes next.</p></div><div><span class="eyebrow">Why SmartCareer</span><h2>Career planning should feel empowering, not overwhelming.</h2><p>SmartCareer is designed to help university students better understand themselves, explore career opportunities, identify skill gaps, and prepare for future careers through personalised guidance.</p><div class="about-points"><span>Student-centred by design</span><span>Honest progress, never fabricated results</span><span>Built for steady, practical growth</span></div></div></div></section>
+
+<section class="section cta-section"><div class="container cta-card"><div><span class="eyebrow">Ready when you are</span><h2>Your career journey starts with one step.</h2><p>Start exploring your strengths and take a more confident step toward your future.</p></div><a class="btn btn-light btn-lg" asp-area="Identity" asp-page="/Account/Register" asp-route-returnUrl="/Home/Dashboard">Start your journey <span aria-hidden="true">→</span></a></div></section>

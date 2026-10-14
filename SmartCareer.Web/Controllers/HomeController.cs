@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using SmartCareer.Web.Models;
 
 namespace SmartCareer.Web.Controllers;
@@ -13,6 +14,18 @@ public class HomeController : Controller
 
     public IActionResult Privacy()
     {
+        return View();
+    }
+
+    public IActionResult Terms() => View();
+
+    [Authorize]
+    public IActionResult Dashboard() => View();
+
+    [Authorize]
+    public IActionResult ComingSoon(string feature = "This feature")
+    {
+        ViewData["Feature"] = feature;
         return View();
     }
 

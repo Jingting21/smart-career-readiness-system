@@ -107,7 +107,10 @@
                 return valid;
             }).length;
             const strength = document.querySelector("[data-password-strength]");
-            strength.textContent = `Strength: ${passed < 3 ? "weak" : passed < 5 ? "moderate" : "strong"}`;
+            const level = passed < 3 ? "weak" : passed < 5 ? "moderate" : "strong";
+            strength.textContent = `Strength: ${level}`;
+            const bar = document.querySelector("[data-strength-bar]");
+            if (bar) bar.className = password.value ? level : "";
             const match = document.querySelector("[data-password-match]");
             if (confirmation?.value) {
                 const matches = password.value === confirmation.value;
@@ -130,4 +133,5 @@ document.addEventListener("click", (event) => {
     const showing = input.type === "text";
     input.type = showing ? "password" : "text";
     button.textContent = showing ? "Show" : "Hide";
+    button.setAttribute("aria-pressed", String(!showing));
 });
