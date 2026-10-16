@@ -30,7 +30,7 @@ public class LoginModel(SignInManager<ApplicationUser> signInManager) : PageMode
 
     public async Task OnGetAsync(string? returnUrl = null)
     {
-        returnUrl ??= Url.Content("~/");
+        returnUrl = StudentRedirects.Resolve(returnUrl, Url.IsLocalUrl);
         await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
         ExternalLogins = (await signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
         ReturnUrl = returnUrl;
@@ -38,7 +38,7 @@ public class LoginModel(SignInManager<ApplicationUser> signInManager) : PageMode
 
     public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
     {
-        returnUrl ??= Url.Content("~/Home/Dashboard");
+        returnUrl = StudentRedirects.Resolve(returnUrl, Url.IsLocalUrl);
         ExternalLogins = (await signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
         ReturnUrl = returnUrl;
         if (!ModelState.IsValid) { ClearPassword(); return Page(); }

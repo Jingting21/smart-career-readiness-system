@@ -31,9 +31,12 @@ public class AdminController(UserManager<ApplicationUser> userManager, SignInMan
         }
         await signInManager.SignInAsync(user, isPersistent: false);
         logger.LogInformation("An administrator signed in.");
-        return Url.IsLocalUrl(model.ReturnUrl) ? LocalRedirect(model.ReturnUrl!) : RedirectToAction(nameof(Index));
+        return AdministratorRedirects.IsSafe(model.ReturnUrl, Url.IsLocalUrl)
+            ? LocalRedirect(model.ReturnUrl!)
+            : RedirectToAction(nameof(Index));
     }
 
     [Authorize(Roles = AppRoles.Administrator), HttpGet("/Admin")]
     public IActionResult Index() => View();
+
 }

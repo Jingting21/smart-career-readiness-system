@@ -18,7 +18,14 @@
     {
         <header class="app-header">
             <button class="sidebar-toggle" type="button" data-sidebar-toggle aria-controls="app-sidebar" aria-expanded="false" aria-label="Open navigation"><span></span><span></span><span></span></button>
-            <a class="brand" asp-controller="Home" asp-action="Dashboard" aria-label="SmartCareer dashboard"><span class="brand-mark">S</span><span>SmartCareer</span></a>
+            @if (isAdministrator)
+            {
+                <a class="brand" asp-controller="Admin" asp-action="Index" aria-label="SmartCareer administration"><span class="brand-mark">S</span><span>SmartCareer</span></a>
+            }
+            else
+            {
+                <a class="brand" asp-controller="Home" asp-action="Dashboard" aria-label="SmartCareer dashboard"><span class="brand-mark">S</span><span>SmartCareer</span></a>
+            }
             <div class="app-page-context"><span>Your workspace</span><strong>@pageTitle</strong></div>
             <partial name="_LoginPartial" />
         </header>

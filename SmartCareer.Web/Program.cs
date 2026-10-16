@@ -6,6 +6,10 @@ using Microsoft.EntityFrameworkCore;
 using SmartCareer.Web.Data;
 using SmartCareer.Web.Models;
 using SmartCareer.Web.Services;
+using SmartCareer.Web.Services.Email;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
+using SmartCareer.Web.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +38,9 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
+builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
+    options.TokenLifespan = PasswordRecoveryPolicy.TokenLifespan);
+
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.HttpOnly = true;
@@ -50,6 +57,24 @@ builder.Services.AddScoped<IdentityDataInitializer>();
 builder.Services.AddScoped<StudentAccountService>();
 builder.Services.AddSingleton<AutocompleteCatalogService>();
 builder.Services.AddScoped<StudentDetailsValidator>();
+builder.Services.AddScoped<StudentPasswordRecoveryService>();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy(PasswordRecoveryPolicy.RateLimitPolicyName, httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => PasswordRecoveryPolicy.CreateRateLimiterOptions()));
+});
+builder.Services.AddOptions<SmtpOptions>()
+    .Bind(builder.Configuration.GetSection(SmtpOptions.SectionName))
+    .ValidateDataAnnotations()
+    .Validate(options => options.Port == 587, "Smtp:Port must be 587 for Gmail STARTTLS.")
+    .ValidateOnStart();
+builder.Services.AddTransient<ISmtpTransport, MailKitSmtpTransport>();
+builder.Services.AddTransient<IEmailService, SmtpEmailService>();
+builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, IdentityEmailSender>();
+builder.Services.AddTransient<Microsoft.AspNetCore.Identity.IEmailSender<ApplicationUser>, IdentityEmailSender>();
 
 var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
 var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
@@ -77,6 +102,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

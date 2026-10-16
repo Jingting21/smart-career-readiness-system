@@ -10,6 +10,19 @@ public class HomeController : Controller
 {
     public IActionResult Index()
     {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            if (User.IsInRole(AppRoles.Administrator))
+            {
+                return RedirectToAction("Index", "Admin");
+            }
+
+            if (User.IsInRole(AppRoles.Student))
+            {
+                return RedirectToAction(nameof(Dashboard));
+            }
+        }
+
         return View();
     }
 

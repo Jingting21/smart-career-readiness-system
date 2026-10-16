@@ -55,7 +55,7 @@ public class RegisterModel(
 
     public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
     {
-        returnUrl ??= Url.Content("~/Home/Dashboard");
+        returnUrl = StudentRedirects.Resolve(returnUrl, Url.IsLocalUrl);
         ExternalLogins = (await signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
         detailsValidator.ValidateAndNormalize(Input, ModelState, nameof(Input));
         if (!ModelState.IsValid) { PrepareInvalidRegistration(); return Page(); }
@@ -66,7 +66,7 @@ public class RegisterModel(
         if (result.Succeeded)
         {
             logger.LogInformation("A new student account was created.");
-            await signInManager.SignInAsync(user, false);
+            await signInManager.SignInAsync(user, isPersistent: false);
             return LocalRedirect(returnUrl);
         }
         RegistrationIdentityErrorMapper.AddToModelState(ModelState, result.Errors);

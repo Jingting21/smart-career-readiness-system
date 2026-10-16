@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using SmartCareer.Web.Models;
 using SmartCareer.Web.Services;
 using SmartCareer.Web.ViewModels;
+using SmartCareer.Web.Security;
 
 namespace SmartCareer.Web.Areas.Identity.Pages.Account;
 
@@ -41,7 +42,7 @@ public class ExternalLoginModel(
         string? returnUrl = null,
         string? remoteError = null)
     {
-        returnUrl ??= Url.Content("~/");
+        returnUrl = StudentRedirects.Resolve(returnUrl, Url.IsLocalUrl);
         if (!string.IsNullOrWhiteSpace(remoteError))
         {
             ErrorMessage = "Google authentication was cancelled or could not be completed. Please try again.";
@@ -101,7 +102,7 @@ public class ExternalLoginModel(
 
     public async Task<IActionResult> OnPostConfirmationAsync(string? returnUrl = null)
     {
-        returnUrl ??= Url.Content("~/");
+        returnUrl = StudentRedirects.Resolve(returnUrl, Url.IsLocalUrl);
         var info = await signInManager.GetExternalLoginInfoAsync();
         if (info is null)
         {
