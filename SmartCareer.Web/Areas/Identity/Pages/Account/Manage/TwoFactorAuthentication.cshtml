@@ -1,0 +1,7 @@
+@page
+@model SmartCareer.Web.Areas.Identity.Pages.Account.Manage.TwoFactorAuthenticationModel
+@{ ViewData["Title"] = "Two-Factor Authentication"; }
+<div class="settings-page settings-detail"><a class="back-link" asp-page="Index">← Back to Settings</a><header class="detail-heading"><span class="settings-icon">◈</span><div><h1>Two-Factor Authentication</h1><p>An authenticator adds a second check when you sign in.</p></div></header><section class="settings-panel"><div class="detail-row"><div><span class="detail-label">Current status</span><strong>@(Model.IsEnabled ? "Two-factor authentication is enabled" : "Two-factor authentication is disabled")</strong></div><span class="settings-state @(Model.IsEnabled ? "is-on" : "")">@(Model.IsEnabled ? "Enabled" : "Disabled")</span></div>
+@if (Model.IsEnabled) { <div class="info-callout"><strong>Your account is protected</strong><p>You have @Model.RecoveryCodesLeft recovery code(s) remaining. Recovery codes are shown only when they are generated in the secure setup flow.</p></div> }
+else { <div class="info-callout"><strong>Authenticator setup required</strong><p>The Identity store supports two-factor authentication, but SmartCareer does not yet provide a complete QR-code enrolment and recovery-code interface. Two-factor authentication has not been enabled or changed.</p></div> }
+</section></div>

@@ -2,7 +2,7 @@
 @using SmartCareer.Web.Models
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
-@{ var isSignedIn = SignInManager.IsSignedIn(User); var pageTitle = ViewData["Title"]?.ToString() ?? "SmartCareer"; }
+@{ var isSignedIn = SignInManager.IsSignedIn(User); var isAdministrator = isSignedIn && User.IsInRole("Administrator"); var pageTitle = ViewData["Title"]?.ToString() ?? "SmartCareer"; }
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,7 +22,8 @@
             <div class="app-page-context"><span>Your workspace</span><strong>@pageTitle</strong></div>
             <partial name="_LoginPartial" />
         </header>
-        <div class="app-shell"><partial name="_StudentSidebar" /><main id="main-content" class="app-main" role="main">@RenderBody()</main></div>
+        @if (isAdministrator) { <main id="main-content" class="app-main admin-main" role="main">@RenderBody()</main> }
+        else { <div class="app-shell"><partial name="_StudentSidebar" /><main id="main-content" class="app-main" role="main">@RenderBody()</main></div> }
     }
     else
     {

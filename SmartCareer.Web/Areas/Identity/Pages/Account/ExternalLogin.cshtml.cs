@@ -55,6 +55,19 @@ public class ExternalLoginModel(
             return RedirectToPage("./Login", new { returnUrl });
         }
 
+        if (!string.Equals(info.LoginProvider, "Google", StringComparison.Ordinal))
+        {
+            ErrorMessage = "Google is the only supported student sign-in provider.";
+            return RedirectToPage("./Login", new { returnUrl });
+        }
+
+        var linkedUser = await userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+        if (linkedUser is not null && !await userManager.IsInRoleAsync(linkedUser, SmartCareer.Web.Security.AppRoles.Student))
+        {
+            ErrorMessage = "This Google identity cannot be used for student sign-in.";
+            return RedirectToPage("./Login", new { returnUrl });
+        }
+
         var result = await signInManager.ExternalLoginSignInAsync(
             info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: false);
         if (result.Succeeded)
@@ -67,11 +80,22 @@ public class ExternalLoginModel(
         {
             return RedirectToPage("./Lockout");
         }
+        if (result.RequiresTwoFactor)
+        {
+            return RedirectToPage("./LoginWith2fa", new { returnUrl, rememberMe = false });
+        }
 
         ProviderDisplayName = info.ProviderDisplayName ?? info.LoginProvider;
         ReturnUrl = returnUrl;
         Input.Email = info.Principal.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
         Input.FullName = info.Principal.FindFirstValue(ClaimTypes.Name) ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(Input.Email) && await userManager.FindByEmailAsync(Input.Email) is { } existingUser)
+        {
+            ErrorMessage = await userManager.HasPasswordAsync(existingUser)
+                ? "An account already uses this email. Sign in with your SmartCareer password, then connect Google from Account Settings. Google was not linked automatically."
+                : "An account already uses this email but has no usable password for verification. Google was not linked automatically; contact the project administrator for recovery assistance.";
+            return RedirectToPage("./Login", new { returnUrl });
+        }
         return Page();
     }
 
@@ -83,6 +107,10 @@ public class ExternalLoginModel(
         {
             ErrorMessage = "Google authentication details expired. Please start again.";
             return RedirectToPage("./Login", new { returnUrl });
+        }
+        if (!string.Equals(info.LoginProvider, "Google", StringComparison.Ordinal))
+        {
+            return BadRequest("Google is the only supported student sign-in provider.");
         }
 
         ProviderDisplayName = info.ProviderDisplayName ?? info.LoginProvider;
@@ -116,7 +144,8 @@ public class ExternalLoginModel(
             University = Input.University,
             Course = Input.Course,
             EducationLevel = Input.EducationLevel,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            EmailConfirmed = HasVerifiedEmailClaim(info.Principal)
         };
         await userStore.SetUserNameAsync(user, Input.Email.Trim(), CancellationToken.None);
         await GetEmailStore().SetEmailAsync(user, Input.Email.Trim(), CancellationToken.None);
@@ -141,4 +170,9 @@ public class ExternalLoginModel(
         userManager.SupportsUserEmail
             ? (IUserEmailStore<ApplicationUser>)userStore
             : throw new NotSupportedException("The configured user store must support email addresses.");
+
+    internal static bool HasVerifiedEmailClaim(ClaimsPrincipal principal) =>
+        principal.Claims.Any(claim =>
+            (claim.Type is "email_verified" or "verified_email") &&
+            string.Equals(claim.Value, "true", StringComparison.OrdinalIgnoreCase));
 }

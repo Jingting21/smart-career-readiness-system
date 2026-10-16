@@ -1,5 +1,7 @@
 
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.OAuth.Claims;
+using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using SmartCareer.Web.Data;
 using SmartCareer.Web.Models;
@@ -58,6 +60,7 @@ if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(goo
         {
             options.ClientId = googleClientId;
             options.ClientSecret = googleClientSecret;
+            options.ClaimActions.Add(new JsonKeyClaimAction("email_verified", ClaimValueTypes.Boolean, "verified_email"));
         });
 }
 

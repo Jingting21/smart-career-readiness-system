@@ -9,4 +9,6 @@ document.addEventListener("click", (event) => {
     input.type = showing ? "password" : "text";
     button.textContent = showing ? "Show" : "Hide";
     button.setAttribute("aria-pressed", String(!showing));
+    const fieldName = button.dataset.passwordLabel || "password";
+    button.setAttribute("aria-label", `${showing ? "Show" : "Hide"} ${fieldName}`);
 });

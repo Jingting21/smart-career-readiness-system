@@ -128,9 +128,9 @@ public sealed class Phase1IdentityTests
     }
 
     [Fact]
-    public void LoginUsesRequiredGenericCredentialError()
+    public void LegacyMigrationUsesGenericCredentialError()
     {
-        Assert.Equal("Invalid email or password. Please try again.", LoginModel.InvalidCredentialsMessage);
+        Assert.Equal("The account details could not be verified.", LegacyAccountModel.InvalidCredentialsMessage);
     }
 
     [Fact]

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using SmartCareer.Web.Models;
+using SmartCareer.Web.Security;
 
 namespace SmartCareer.Web.Controllers;
 
@@ -19,10 +20,10 @@ public class HomeController : Controller
 
     public IActionResult Terms() => View();
 
-    [Authorize]
+    [Authorize(Roles = AppRoles.Student)]
     public IActionResult Dashboard() => View();
 
-    [Authorize]
+    [Authorize(Roles = AppRoles.Student)]
     public IActionResult ComingSoon(string feature = "This feature")
     {
         ViewData["Feature"] = feature;

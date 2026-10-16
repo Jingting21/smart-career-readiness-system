@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SmartCareer.Web\SmartCareer.Web.csproj" />
+    <Compile Include="..\SmartCareer.AdminSetup\AdminProvisioningService.cs" Link="AdminProvisioningService.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,0 +1,6 @@
+@page
+@model SmartCareer.Web.Areas.Identity.Pages.Account.Manage.EmailModel
+@{ ViewData["Title"] = "Email Address"; }
+<div class="settings-page settings-detail"><a class="back-link" asp-page="Index">← Back to Settings</a><header class="detail-heading"><span class="settings-icon" aria-hidden="true">@@</span><div><h1>Email Address</h1><p>Review the email registered with SmartCareer.</p></div></header>
+<section class="settings-panel"><div class="detail-row"><div><span class="detail-label">Current email</span><strong>@Model.Email</strong></div><span class="settings-state @(Model.IsConfirmed ? "is-on" : "")">@(Model.IsConfirmed ? "Confirmed" : "Unconfirmed")</span></div>
+<div class="info-callout"><strong>Email changes are currently unavailable</strong><p>A secure change requires confirmation email delivery, which is not configured yet. SmartCareer has not sent a message and will not replace this address automatically.</p></div></section></div>

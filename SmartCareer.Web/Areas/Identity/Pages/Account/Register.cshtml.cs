@@ -55,72 +55,45 @@ public class RegisterModel(
 
     public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
     {
-        returnUrl ??= Url.Content("~/");
+        returnUrl ??= Url.Content("~/Home/Dashboard");
         ExternalLogins = (await signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
         detailsValidator.ValidateAndNormalize(Input, ModelState, nameof(Input));
-        if (!ModelState.IsValid)
-        {
-            PrepareInvalidRegistration();
-            return Page();
-        }
-
-        var user = new ApplicationUser
-        {
-            FullName = Input.FullName.Trim(),
-            University = Input.University,
-            Course = Input.Course,
-            EducationLevel = Input.EducationLevel,
-            CreatedAt = DateTime.UtcNow
-        };
-
+        if (!ModelState.IsValid) { PrepareInvalidRegistration(); return Page(); }
+        var user = new ApplicationUser { FullName = Input.FullName.Trim(), University = Input.University, Course = Input.Course, EducationLevel = Input.EducationLevel, CreatedAt = DateTime.UtcNow };
         await userStore.SetUserNameAsync(user, Input.Email.Trim(), CancellationToken.None);
-        var emailStore = GetEmailStore();
-        await emailStore.SetEmailAsync(user, Input.Email.Trim(), CancellationToken.None);
-
+        await GetEmailStore().SetEmailAsync(user, Input.Email.Trim(), CancellationToken.None);
         var result = await studentAccountService.CreateAsync(user, Input.Password);
         if (result.Succeeded)
         {
             logger.LogInformation("A new student account was created.");
-            await signInManager.SignInAsync(user, isPersistent: false);
+            await signInManager.SignInAsync(user, false);
             return LocalRedirect(returnUrl);
         }
-
         RegistrationIdentityErrorMapper.AddToModelState(ModelState, result.Errors);
-
         PrepareInvalidRegistration();
         return Page();
     }
 
     public async Task<IActionResult> OnPostExternalLoginAsync(string provider, string? returnUrl = null)
     {
+        if (!string.Equals(provider, "Google", StringComparison.Ordinal)) return BadRequest("Google is the only supported external provider.");
         var schemes = await signInManager.GetExternalAuthenticationSchemesAsync();
-        if (!schemes.Any(scheme => string.Equals(scheme.Name, provider, StringComparison.Ordinal)))
-        {
-            return BadRequest("Unknown external authentication provider.");
-        }
-
+        if (!schemes.Any(s => s.Name == provider)) return BadRequest("Unknown external authentication provider.");
         var redirectUrl = Url.Page("./ExternalLogin", "Callback", new { returnUrl });
         var properties = signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+        LoginModel.RequestGoogleAccountSelection(provider, properties);
         return new ChallengeResult(provider, properties);
     }
 
-    private IUserEmailStore<ApplicationUser> GetEmailStore()
-    {
-        if (!userManager.SupportsUserEmail)
-        {
-            throw new NotSupportedException("The configured user store must support email addresses.");
-        }
-
-        return (IUserEmailStore<ApplicationUser>)userStore;
-    }
+    private IUserEmailStore<ApplicationUser> GetEmailStore() => userManager.SupportsUserEmail ? (IUserEmailStore<ApplicationUser>)userStore : throw new NotSupportedException("The configured user store must support email addresses.");
 
     private void PrepareInvalidRegistration()
     {
         ShowPasswordReentryNotice = true;
         SensitiveModelStateCleaner.ClearAttemptedValue(ModelState, "Input.Password");
         SensitiveModelStateCleaner.ClearAttemptedValue(ModelState, "Input.ConfirmPassword");
-        Input.Password = string.Empty;
-        Input.ConfirmPassword = string.Empty;
+        Input.Password = "";
+        Input.ConfirmPassword = "";
     }
 
 }

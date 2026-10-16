@@ -1,4 +1,4 @@
-@{ var action = ViewContext.RouteData.Values["action"]?.ToString(); }
+@{ var action = ViewContext.RouteData.Values["action"]?.ToString(); var isSettings = ViewContext.RouteData.Values["area"]?.ToString() == "Identity" && (ViewContext.ActionDescriptor.DisplayName?.Contains("/Account/Manage/") ?? false); }
 <aside id="app-sidebar" class="app-sidebar" aria-label="Student navigation"><nav>
     <a class="sidebar-link @(action == "Dashboard" ? "active" : "")" asp-controller="Home" asp-action="Dashboard"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a>
     <a class="sidebar-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Profile" ? "active" : "")" asp-controller="Profile" asp-action="Index"><span class="nav-icon" aria-hidden="true">○</span><span>My Profile</span></a>
@@ -6,6 +6,6 @@
     <a class="sidebar-link" asp-controller="Home" asp-action="ComingSoon" asp-route-feature="Career Explorer"><span class="nav-icon" aria-hidden="true">⌕</span><span>Career Explorer</span><span class="soon-pill">Soon</span></a>
     <a class="sidebar-link" asp-controller="Home" asp-action="ComingSoon" asp-route-feature="Career Readiness"><span class="nav-icon" aria-hidden="true">✓</span><span>Career Readiness</span><span class="soon-pill">Soon</span></a>
     <a class="sidebar-link" asp-controller="Home" asp-action="ComingSoon" asp-route-feature="My Roadmap"><span class="nav-icon" aria-hidden="true">↗</span><span>My Roadmap</span><span class="soon-pill">Soon</span></a>
-    <a class="sidebar-link" asp-area="Identity" asp-page="/Account/Manage/Index"><span class="nav-icon" aria-hidden="true">⚙</span><span>Settings</span></a>
+    <a class="sidebar-link @(isSettings ? "active" : "")" asp-area="Identity" asp-page="/Account/Manage/Index" aria-current="@(isSettings ? "page" : null)"><span class="nav-icon" aria-hidden="true">⚙</span><span>Settings</span></a>
     </nav><div class="sidebar-note"><span>Career journey</span><strong>One step at a time.</strong><p>Your workspace will grow with you.</p></div></aside>
 <button class="sidebar-backdrop" type="button" data-sidebar-close aria-label="Close navigation"></button>

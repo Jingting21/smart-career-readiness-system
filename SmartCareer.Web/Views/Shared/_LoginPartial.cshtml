@@ -7,12 +7,13 @@
     var appUser = await UserManager.GetUserAsync(User);
     var displayName = appUser?.FullName ?? UserManager.GetUserName(User) ?? "Student";
     var initial = displayName[..1].ToUpperInvariant();
+    var isAdministrator = User.IsInRole("Administrator");
     <div class="account-menu dropdown">
-        <button class="account-button dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><span class="avatar">@initial</span><span class="account-copy"><strong>@displayName</strong><small>Student account</small></span></button>
-        <div class="dropdown-menu dropdown-menu-end shadow-sm"><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">Account settings</a><div class="dropdown-divider"></div><form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post"><button type="submit" class="dropdown-item">Sign out</button></form></div>
+        <button class="account-button dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><span class="avatar">@initial</span><span class="account-copy"><strong>@displayName</strong><small>@(isAdministrator ? "Administrator account" : "Student account")</small></span></button>
+        <div class="dropdown-menu dropdown-menu-end shadow-sm">@if (isAdministrator) { <a class="dropdown-item" asp-controller="Admin" asp-action="Index">Administration</a> } else { <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">Account settings</a> }<div class="dropdown-divider"></div><form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post"><button type="submit" class="dropdown-item">Sign out</button></form></div>
     </div>
 }
 else
 {
-    <div class="nav-auth"><a class="nav-login" asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="/Home/Dashboard">Log in</a><a class="btn btn-primary btn-sm" asp-area="Identity" asp-page="/Account/Register" asp-route-returnUrl="/Home/Dashboard">Get started</a></div>
+    <div class="nav-auth"><a class="nav-login" asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="/Home/Dashboard">Login</a><a class="btn btn-primary btn-sm" asp-area="Identity" asp-page="/Account/Register" asp-route-returnUrl="/Home/Dashboard">Register</a></div>
 }
