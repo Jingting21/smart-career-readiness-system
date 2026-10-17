@@ -17,6 +17,7 @@ public class RegisterModel(
     IUserStore<ApplicationUser> userStore,
     SignInManager<ApplicationUser> signInManager,
     StudentAccountService studentAccountService,
+    StudentEmailVerificationService emailVerificationService,
     StudentDetailsValidator detailsValidator,
     ILogger<RegisterModel> logger) : PageModel
 {
@@ -66,6 +67,18 @@ public class RegisterModel(
         if (result.Succeeded)
         {
             logger.LogInformation("A new student account was created.");
+            var deliveryOutcome = await emailVerificationService.SendAsync(
+                user,
+                (account, encodedToken) => Url.Page(
+                    "/Account/ConfirmEmail",
+                    pageHandler: null,
+                    values: new { area = "Identity", userId = account.Id, code = encodedToken },
+                    protocol: Request.Scheme)
+                    ?? throw new InvalidOperationException("Unable to create the email confirmation URL."));
+            if (deliveryOutcome == EmailVerificationDeliveryOutcome.DeliveryFailed)
+            {
+                logger.LogWarning("A student verification email could not be delivered after registration.");
+            }
             await signInManager.SignInAsync(user, isPersistent: false);
             return LocalRedirect(returnUrl);
         }

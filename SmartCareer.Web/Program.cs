@@ -58,6 +58,7 @@ builder.Services.AddScoped<StudentAccountService>();
 builder.Services.AddSingleton<AutocompleteCatalogService>();
 builder.Services.AddScoped<StudentDetailsValidator>();
 builder.Services.AddScoped<StudentPasswordRecoveryService>();
+builder.Services.AddScoped<StudentEmailVerificationService>();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -65,6 +66,12 @@ builder.Services.AddRateLimiter(options =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => PasswordRecoveryPolicy.CreateRateLimiterOptions()));
+    options.AddPolicy(EmailVerificationPolicy.RateLimitPolicyName, httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                ?? "unknown",
+            _ => EmailVerificationPolicy.CreateRateLimiterOptions()));
 });
 builder.Services.AddOptions<SmtpOptions>()
     .Bind(builder.Configuration.GetSection(SmtpOptions.SectionName))
@@ -102,9 +109,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
-app.UseRateLimiter();
-
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapStaticAssets();

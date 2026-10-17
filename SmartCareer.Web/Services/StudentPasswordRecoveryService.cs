@@ -128,6 +128,5 @@ public sealed class StudentPasswordRecoveryService(
     private async Task<bool> IsEligibleAsync(ApplicationUser? user) =>
         user is not null &&
         await userManager.IsInRoleAsync(user, AppRoles.Student) &&
-        await userManager.HasPasswordAsync(user) &&
-        await userManager.IsEmailConfirmedAsync(user);
+        await userManager.HasPasswordAsync(user);
 }

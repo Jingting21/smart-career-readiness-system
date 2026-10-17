@@ -34,12 +34,12 @@ public sealed class PasswordRecoveryTests
     }
 
     [Fact]
-    public async Task UnknownAdministratorGoogleOnlyAndUnverifiedAccountsReceiveNeutralOutcome()
+    public async Task UnverifiedPasswordStudentIsEligibleButUnknownAdministratorAndGoogleOnlyAreNot()
     {
         await using var provider = CreateProvider();
         using var scope = provider.CreateScope();
         await InitializeRolesAsync(scope);
-        await CreatePasswordStudentAsync(scope, "unverified@example.test", confirmed: false);
+        var unverified = await CreatePasswordStudentAsync(scope, "unverified@example.test", confirmed: false);
         await CreateAdministratorAsync(scope, "administrator@example.test");
         await CreateGoogleOnlyStudentAsync(scope, "google-only@example.test");
         var service = scope.ServiceProvider.GetRequiredService<StudentPasswordRecoveryService>();
@@ -49,8 +49,7 @@ public sealed class PasswordRecoveryTests
                  {
                      "unknown@example.test",
                      "administrator@example.test",
-                     "google-only@example.test",
-                     "unverified@example.test"
+                     "google-only@example.test"
                  })
         {
             var outcome = await service.RequestResetAsync(
@@ -59,7 +58,34 @@ public sealed class PasswordRecoveryTests
             Assert.Equal(PasswordResetRequestOutcome.Neutral, outcome);
         }
 
-        Assert.Equal(0, sender.SendCount);
+        var unverifiedOutcome = await service.RequestResetAsync(
+            unverified.Email!,
+            (account, code) => $"https://localhost/reset?userId={account.Id}&code={code}");
+
+        Assert.Equal(PasswordResetRequestOutcome.Sent, unverifiedOutcome);
+        Assert.Equal(1, sender.SendCount);
+    }
+
+    [Fact]
+    public async Task ResettingUnverifiedStudentDoesNotConfirmEmail()
+    {
+        await using var provider = CreateProvider();
+        using var scope = provider.CreateScope();
+        var user = await CreatePasswordStudentAsync(scope, "still-unverified@example.test", confirmed: false);
+        var service = scope.ServiceProvider.GetRequiredService<StudentPasswordRecoveryService>();
+        var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var sender = scope.ServiceProvider.GetRequiredService<RecordingPasswordResetSender>();
+        await service.RequestResetAsync(
+            user.Email!,
+            (account, code) => $"https://localhost/reset?userId={account.Id}&code={code}");
+
+        var result = await service.ResetAsync(
+            user.Id,
+            QueryValue(sender.ResetLink!, "code"),
+            "NewValid#Pass2");
+
+        Assert.True(result.Succeeded);
+        Assert.False(await users.IsEmailConfirmedAsync(user));
     }
 
     [Fact]
