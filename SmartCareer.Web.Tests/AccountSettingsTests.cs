@@ -77,9 +77,21 @@ public sealed class AccountSettingsTests
         Assert.Contains("asp-page=\"PersonalData\"", view);
         Assert.Contains("ChangePassword", view);
         Assert.Contains("SetPassword", view);
-        Assert.Contains("TwoFactorAuthentication", view);
+        Assert.DoesNotContain("TwoFactorAuthentication", view);
+        Assert.DoesNotContain("Two-Factor Authentication", view);
         Assert.DoesNotContain("University", view);
         Assert.DoesNotContain("EducationLevel", view);
+    }
+
+    [Fact]
+    public void SettingsAvatarInitialIsCenteredAtAllViewportSizes()
+    {
+        var view = ReadWebFile("Areas", "Identity", "Pages", "Account", "Manage", "Index.cshtml");
+        var styles = ReadWebFile("wwwroot", "css", "site.css");
+
+        Assert.Contains("class=\"settings-avatar\"", view);
+        Assert.Contains("Model.CurrentUser.FullName[..1].ToUpperInvariant()", view);
+        Assert.Contains(".account-summary .settings-avatar{display:grid;place-items:center}", styles);
     }
 
     [Fact]
@@ -120,6 +132,38 @@ public sealed class AccountSettingsTests
         var sidebar = ReadWebFile("Views", "Shared", "_StudentSidebar.cshtml");
         Assert.Contains("isSettings", sidebar);
         Assert.Contains("aria-current", sidebar);
+        Assert.DoesNotContain("TwoFactorAuthentication", sidebar);
+        Assert.DoesNotContain("Two-Factor Authentication", sidebar);
+    }
+
+    [Fact]
+    public void IdentityManageNavigationOmitsTwoFactorAndPreservesOtherDestinations()
+    {
+        var navigation = ReadWebFile("Areas", "Identity", "Pages", "Account", "Manage", "_ManageNav.cshtml");
+
+        Assert.Contains(">Profile</a>", navigation);
+        Assert.Contains(">Email</a>", navigation);
+        Assert.Contains(">Password</a>", navigation);
+        Assert.Contains(">External logins</a>", navigation);
+        Assert.Contains(">Personal data</a>", navigation);
+        Assert.DoesNotContain("TwoFactorAuthentication", navigation);
+        Assert.DoesNotContain("Two-factor authentication", navigation);
+    }
+
+    [Fact]
+    public void DashboardUsesCompleteStoredNameAndSupportsMobileWrapping()
+    {
+        var dashboard = ReadWebFile("Views", "Home", "Dashboard.cshtml");
+        var styles = ReadWebFile("wwwroot", "css", "site.css");
+
+        Assert.Contains("student?.FullName", dashboard);
+        Assert.Contains("string.IsNullOrWhiteSpace", dashboard);
+        Assert.Contains("Welcome back, {fullName}!", dashboard);
+        Assert.Contains("Welcome back!", dashboard);
+        Assert.DoesNotContain("FullName?.Split", dashboard);
+        Assert.DoesNotContain("GetUserName", dashboard);
+        Assert.Contains(".welcome-banner h1", styles);
+        Assert.Contains("overflow-wrap:anywhere", styles);
     }
 
     private static string ReadWebFile(params string[] parts)
