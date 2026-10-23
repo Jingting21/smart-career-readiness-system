@@ -133,6 +133,7 @@ public sealed class EmailVerificationTests
     {
         var services = new ServiceCollection();
         services.AddLogging();
+        services.AddDataProtection();
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase($"EmailVerification-{Guid.NewGuid()}", new InMemoryDatabaseRoot()));
         services.AddIdentityCore<ApplicationUser>(options =>

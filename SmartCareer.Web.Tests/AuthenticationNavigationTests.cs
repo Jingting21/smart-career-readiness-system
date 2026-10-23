@@ -73,11 +73,16 @@ public sealed class AuthenticationNavigationTests
     {
         var registration = ReadWebFile("Areas", "Identity", "Pages", "Account", "Register.cshtml.cs");
         var login = ReadWebFile("Areas", "Identity", "Pages", "Account", "Login.cshtml.cs");
+        var program = ReadWebFile("Program.cs");
 
         Assert.Contains("signInManager.SignInAsync(user, isPersistent: false)", registration);
         Assert.Contains("StudentRedirects.Resolve", registration);
-        Assert.DoesNotContain("emailVerificationService", registration);
+        Assert.Contains("emailVerificationService.SendAsync", registration);
+        Assert.True(
+            registration.IndexOf("emailVerificationService.SendAsync", StringComparison.Ordinal) <
+            registration.IndexOf("signInManager.SignInAsync(user, isPersistent: false)", StringComparison.Ordinal));
         Assert.DoesNotContain("CheckEmail", registration);
+        Assert.Contains("options.SignIn.RequireConfirmedAccount = false", program);
         Assert.Contains("StudentRedirects.Resolve", login);
         Assert.DoesNotContain("IsEmailConfirmedAsync", login);
         Assert.Contains("IsInRoleAsync(user, AppRoles.Student)", login);

@@ -216,6 +216,7 @@ public sealed class PasswordRecoveryTests
     {
         var services = new ServiceCollection();
         services.AddLogging();
+        services.AddDataProtection();
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase(
                 $"PasswordRecovery-{Guid.NewGuid()}",

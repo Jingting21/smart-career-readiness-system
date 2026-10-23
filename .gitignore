@@ -426,3 +426,9 @@ FodyWeavers.xsd
 
 # Official VS Code C# Dev Kit Extension exclusion
 #*.lscache
+
+# O*NET 31.0 original downloaded dataset
+/dataset-research/onet-31.0/db_31_0_json.zip
+
+# O*NET 31.0 extracted raw files
+/dataset-research/onet-31.0/raw/

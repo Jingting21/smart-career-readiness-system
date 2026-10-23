@@ -110,7 +110,7 @@ public sealed class AdminProvisioningTests
     private static string FindRoot()
     {
         for (var directory = new DirectoryInfo(Directory.GetCurrentDirectory()); directory is not null; directory = directory.Parent)
-            if (Directory.Exists(Path.Combine(directory.FullName, "SmartCareer.Web"))) return directory.FullName;
+            if (File.Exists(Path.Combine(directory.FullName, "SmartCareer.Web", "Program.cs"))) return directory.FullName;
         throw new DirectoryNotFoundException();
     }
 }

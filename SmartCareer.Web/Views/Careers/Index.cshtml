@@ -1,0 +1,136 @@
+@model SmartCareer.Web.ViewModels.CareerExplorerViewModel
+@{
+    ViewData["Title"] = "Career Explorer";
+    var firstResult = Model.FilteredCount == 0 ? 0 : ((Model.CurrentPage - 1) * Model.PageSize) + 1;
+    var lastResult = Math.Min(Model.CurrentPage * Model.PageSize, Model.FilteredCount);
+}
+
+<div class="career-explorer">
+    <section class="career-hero career-hero-compact" aria-labelledby="career-page-title">
+        <div>
+            <span class="eyebrow">Career exploration</span>
+            <h1 id="career-page-title">Discover career paths</h1>
+            <p>Browse by category or search for work that interests you. You do not need to know exactly what you want yet.</p>
+        </div>
+        <div class="career-total" aria-label="@Model.TotalActiveCareers active careers">
+            <strong>@Model.TotalActiveCareers</strong>
+            <span>active careers</span>
+        </div>
+    </section>
+
+    @if (!Model.IsCatalogueAvailable)
+    {
+        <section class="career-empty" role="status">
+            <span class="feature-icon" aria-hidden="true">⌕</span>
+            <h2>Career catalogue unavailable</h2>
+            <p>There are no active careers to display right now. Please try again later.</p>
+        </section>
+    }
+    else
+    {
+        <form class="career-search" method="get" asp-controller="Careers" asp-action="Index" asp-fragment="career-results" role="search">
+            @if (!string.IsNullOrWhiteSpace(Model.SelectedCategorySlug))
+            {
+                <input type="hidden" name="category" value="@Model.SelectedCategorySlug" />
+            }
+            <div class="career-search-field">
+                <label for="career-query">Search careers</label>
+                <input id="career-query" class="form-control" type="search" name="query" value="@Model.Query"
+                       maxlength="100" placeholder="Try software, finance or environment" aria-describedby="career-query-help career-query-error" />
+                <span id="career-query-help">Search by career title or keyword.</span>
+                <span id="career-query-error" class="text-danger" asp-validation-for="Query"></span>
+            </div>
+            <button class="btn btn-primary" type="submit">Search</button>
+        </form>
+
+        <section class="career-categories" aria-labelledby="category-heading">
+            <div class="career-section-heading">
+                <div><h2 id="category-heading">Browse by category</h2><p>Choose one area, or explore the complete catalogue.</p></div>
+            </div>
+            <nav class="category-chips" aria-label="Filter careers by category">
+                <a class="category-chip @(Model.SelectedCategorySlug is null ? "selected" : null)"
+                   asp-controller="Careers" asp-action="Index" asp-route-query="@Model.Query" asp-fragment="career-results"
+                   aria-current="@(Model.SelectedCategorySlug is null ? "true" : null)">
+                    <span>All Careers</span><b>@Model.TotalActiveCareers</b>
+                </a>
+                @foreach (var category in Model.Categories)
+                {
+                    var selected = category.Slug == Model.SelectedCategorySlug;
+                    <a class="category-chip @(selected ? "selected" : null)"
+                       asp-controller="Careers" asp-action="Index" asp-route-category="@category.Slug" asp-route-query="@Model.Query"
+                       asp-fragment="career-results" aria-current="@(selected ? "true" : null)">
+                        <span>@category.Name</span><b>@category.ActiveCareerCount</b>
+                    </a>
+                }
+            </nav>
+        </section>
+
+        <section id="career-results" class="career-results" tabindex="-1" aria-labelledby="results-heading">
+            <div class="career-results-summary">
+                <div>
+                    <h2 id="results-heading">Career results</h2>
+                    @if (Model.FilteredCount > 0)
+                    {
+                        <p>Showing @firstResult–@lastResult of @Model.FilteredCount matching careers.</p>
+                    }
+                    else
+                    {
+                        <p>No careers match the current search and category.</p>
+                    }
+                </div>
+                @if (Model.HasActiveFilters)
+                {
+                    <div class="active-filters" aria-label="Active filters">
+                        @if (!string.IsNullOrWhiteSpace(Model.Query))
+                        {
+                            <span><strong>Search:</strong> “@Model.Query”</span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.SelectedCategoryName))
+                        {
+                            <span><strong>Category:</strong> @Model.SelectedCategoryName</span>
+                        }
+                        <a asp-controller="Careers" asp-action="Index" asp-fragment="career-results" class="clear-filters">Clear filters</a>
+                    </div>
+                }
+            </div>
+
+            @if (Model.FilteredCount == 0)
+            {
+                <div class="career-empty" role="status">
+                    <span class="feature-icon" aria-hidden="true">⌕</span>
+                    <h3>No careers matched your search</h3>
+                    <p>Check the spelling, try a broader keyword, or explore all careers.</p>
+                    <a class="btn btn-soft" asp-controller="Careers" asp-action="Index" asp-fragment="career-results">Clear search and filters</a>
+                </div>
+            }
+            else
+            {
+                <div class="career-grid">
+                    @foreach (var career in Model.Careers)
+                    {
+                        <article class="career-card">
+                            <span class="career-category">@career.CategoryName</span>
+                            <h3>@career.Title</h3>
+                            <p>@career.Description</p>
+                        </article>
+                    }
+                </div>
+
+                @if (Model.TotalPages > 1)
+                {
+                    <nav class="career-pagination" aria-label="Career result pages">
+                        <a class="page-link @(Model.CurrentPage == 1 ? "disabled" : null)" aria-disabled="@(Model.CurrentPage == 1 ? "true" : null)"
+                           tabindex="@(Model.CurrentPage == 1 ? "-1" : null)" asp-controller="Careers" asp-action="Index"
+                           asp-route-query="@Model.Query" asp-route-category="@Model.SelectedCategorySlug" asp-route-page="@(Model.CurrentPage - 1)"
+                           asp-fragment="career-results">Previous</a>
+                        <span>Page @Model.CurrentPage of @Model.TotalPages</span>
+                        <a class="page-link @(Model.CurrentPage == Model.TotalPages ? "disabled" : null)" aria-disabled="@(Model.CurrentPage == Model.TotalPages ? "true" : null)"
+                           tabindex="@(Model.CurrentPage == Model.TotalPages ? "-1" : null)" asp-controller="Careers" asp-action="Index"
+                           asp-route-query="@Model.Query" asp-route-category="@Model.SelectedCategorySlug" asp-route-page="@(Model.CurrentPage + 1)"
+                           asp-fragment="career-results">Next</a>
+                    </nav>
+                }
+            }
+        </section>
+    }
+</div>

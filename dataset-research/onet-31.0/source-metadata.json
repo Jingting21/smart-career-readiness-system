@@ -1,0 +1,26 @@
+{
+  "dataset": "O*NET Database 31.0",
+  "releaseDate": "August 2026",
+  "retrievedOn": "2026-10-24",
+  "sourceUrl": "https://www.onetcenter.org/dl_files/database/db_31_0_json.zip",
+  "releaseArchiveUrl": "https://www.onetcenter.org/db_releases.html",
+  "licenseUrl": "https://www.onetcenter.org/license_db.html",
+  "artifacts": [
+    {
+      "path": "db_31_0_json.zip",
+      "sha256": "E88360B2D2375D15107B4F1C3DD7FEC780D792D051B37A6A81FE8F1328AF47AA"
+    },
+    {
+      "path": "raw/db_31_0_json/occupation_data.json",
+      "sha256": "8EEC5D2449C0B96A90FCA0F67184B3BF76C15B3549C4F145ADB48C3AE55F52F8"
+    },
+    {
+      "path": "raw/db_31_0_json/essential_skills.json",
+      "sha256": "3E7B832AA9423E7F7482E52BED8F91AD3F158755A1BAF7513C1D4DBD3CE2C779"
+    },
+    {
+      "path": "raw/db_31_0_json/transferable_skills.json",
+      "sha256": "7179DBDB492CFCA3DE79F48EFB0C9042FD9D30DBC5024B220E0C9A9908AA9555"
+    }
+  ]
+}
