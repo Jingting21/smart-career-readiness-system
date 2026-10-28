@@ -21,6 +21,38 @@
     {
       "path": "raw/db_31_0_json/transferable_skills.json",
       "sha256": "7179DBDB492CFCA3DE79F48EFB0C9042FD9D30DBC5024B220E0C9A9908AA9555"
+    },
+    {
+      "path": "raw/db_31_0_json/task_statements.json",
+      "sha256": "D48D985C2BCF39A8760C9FFAC599CD12309D597D564856E4BB3E9759EE948545"
+    },
+    {
+      "path": "raw/db_31_0_json/task_ratings.json",
+      "sha256": "6D89F4598ADB042B523C898F4ABE805B634D90E6806F1C2144B8B3A23430AF49"
+    },
+    {
+      "path": "raw/db_31_0_json/education.json",
+      "sha256": "E995D6DA186E06536D7787FF22080EE392F27EBF0B59C78F14EF2F4E4AE5DFA0"
+    },
+    {
+      "path": "raw/db_31_0_json/education_categories.json",
+      "sha256": "6533A4DF74750EF6144171B80D42B49E5E258D7CF09F0A4CDDA3F6AFD7791BD4"
+    },
+    {
+      "path": "raw/db_31_0_json/training_and_experience.json",
+      "sha256": "C63D830100E41235C086C14F0105B2C83F6D5B061D5C9959CEA7E3AD2841E3A1"
+    },
+    {
+      "path": "raw/db_31_0_json/training_and_experience_categories.json",
+      "sha256": "4549DFBDEA97F4D7F98432FB3E896134924A4F0A56E6FC26A47D28D021DC4694"
+    },
+    {
+      "path": "raw/db_31_0_json/job_zones.json",
+      "sha256": "FE9AE7E93DE8B1AD2404FFF8D7279547C32EB633D107E47E56C868A15B8914BB"
+    },
+    {
+      "path": "raw/db_31_0_json/job_zone_reference.json",
+      "sha256": "F66D665A2E507C825A71AEDB2C13BA22765E8259BC6C7FE5B3CDFD8105475A66"
     }
   ]
 }

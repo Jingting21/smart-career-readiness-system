@@ -9,6 +9,10 @@ public interface ICareerCatalogQueryService
         string? categorySlug,
         int page,
         CancellationToken cancellationToken = default);
+
+    Task<CareerDetailsViewModel?> GetDetailsAsync(
+        string occupationCode, string? explorerQuery, string? explorerCategory, int explorerPage,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed record CareerExplorerQueryResult(

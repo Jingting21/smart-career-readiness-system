@@ -209,6 +209,28 @@ public sealed class OnetCareerCatalogImporter
                 SourceVersion))
             .ToList();
 
+        var guideValidation = new CareerGuideDatasetValidator().Validate(paths);
+        foreach (var error in guideValidation.Errors) errors.Add($"Career guide dataset: {error}");
+        var careerTasks = guideValidation.Tasks.Select(task => new CareerTaskImportRecord(
+                task.OccupationCode, task.TaskId, task.Statement, task.TaskType, task.Importance,
+                task.Relevance, task.IncumbentsResponding, task.SourceUpdatedOn,
+                task.DomainSource, SourceVersion))
+            .ToList();
+        var educationRatings = guideValidation.EducationRatings.Select(rating => new CareerEducationRatingImportRecord(
+            rating.OccupationCode, rating.ElementId, rating.ScaleId, rating.Category, rating.CategoryDescription,
+            rating.Percentage, rating.RespondentCount, rating.StandardError, rating.LowerConfidenceBound,
+            rating.UpperConfidenceBound, rating.IsSuppressed, rating.SourceUpdatedOn, rating.DomainSource, SourceVersion)).ToList();
+        var trainingRatings = guideValidation.TrainingRatings.Select(rating => new CareerTrainingRatingImportRecord(
+            rating.OccupationCode, rating.ElementId, rating.ScaleId, rating.Category, rating.CategoryDescription,
+            rating.Percentage, rating.RespondentCount, rating.StandardError, rating.LowerConfidenceBound,
+            rating.UpperConfidenceBound, rating.IsSuppressed, rating.SourceUpdatedOn, rating.DomainSource, SourceVersion)).ToList();
+        var jobZoneDefinitions = guideValidation.JobZoneDefinitions.Select(definition => new JobZoneDefinitionImportRecord(
+            definition.JobZone, definition.Name, definition.Experience, definition.Education,
+            definition.JobTraining, definition.Examples, definition.SvpRange, SourceVersion)).ToList();
+        var careerJobZones = guideValidation.CareerJobZones.Select(assignment => new CareerJobZoneImportRecord(
+            assignment.OccupationCode, assignment.JobZone, assignment.SourceUpdatedOn,
+            assignment.DomainSource, SourceVersion)).ToList();
+
         ValidatePlan(ExpectedCategories, careers, skills, careerSkills, sources, manifest, errors);
         warnings.Add("Responsibilities and Qualifications remain null: the four-table schema cannot preserve structured O*NET tasks or education/training records without lossy concatenation.");
         warnings.Add("Career.SourceUpdatedOn remains null: O*NET occupation_data has no row update date and the release date has only month-level precision.");
@@ -220,6 +242,11 @@ public sealed class OnetCareerCatalogImporter
             Careers = careers,
             Skills = skills,
             CareerSkills = careerSkills,
+            CareerTasks = careerTasks,
+            EducationRatings = educationRatings,
+            TrainingRatings = trainingRatings,
+            JobZoneDefinitions = jobZoneDefinitions,
+            CareerJobZones = careerJobZones,
             Sources = sources,
             Provenance = provenance,
             Errors = errors,
@@ -467,7 +494,9 @@ public sealed class OnetCareerCatalogImporter
         {
             paths.ManifestPath, paths.ValidationReportPath, paths.ChecksumsPath, paths.SourceMetadataPath,
             paths.ArchivePath, paths.OccupationsPath, paths.EssentialSkillsPath, paths.TransferableSkillsPath,
-            paths.ContentModelPath, paths.ScalesPath
+            paths.ContentModelPath, paths.ScalesPath, paths.TaskStatementsPath, paths.TaskRatingsPath,
+            paths.EducationPath, paths.EducationCategoriesPath, paths.TrainingAndExperiencePath,
+            paths.TrainingAndExperienceCategoriesPath, paths.JobZonesPath, paths.JobZoneReferencePath
         };
         foreach (var file in files.Where(file => !File.Exists(file)))
         {
@@ -518,7 +547,9 @@ public sealed class OnetCareerCatalogImporter
         foreach (var file in new[]
                  {
                      paths.OccupationsPath, paths.EssentialSkillsPath, paths.TransferableSkillsPath,
-                     paths.ContentModelPath, paths.ScalesPath
+                     paths.ContentModelPath, paths.ScalesPath, paths.TaskStatementsPath, paths.TaskRatingsPath,
+                     paths.EducationPath, paths.EducationCategoriesPath, paths.TrainingAndExperiencePath,
+                     paths.TrainingAndExperienceCategoriesPath, paths.JobZonesPath, paths.JobZoneReferencePath
                  })
         {
             var entry = archive.Entries.SingleOrDefault(candidate =>
@@ -692,7 +723,8 @@ public sealed class OnetCareerCatalogImporter
     private static CareerCatalogImportPlan EmptyPlan(IReadOnlyList<string> errors, IReadOnlyList<string> warnings) =>
         new()
         {
-            Categories = [], Careers = [], Skills = [], CareerSkills = [], Sources = [],
+            Categories = [], Careers = [], Skills = [], CareerSkills = [], CareerTasks = [],
+            EducationRatings = [], TrainingRatings = [], JobZoneDefinitions = [], CareerJobZones = [], Sources = [],
             Provenance = new CareerCatalogProvenance("", "", default, "", "", "", "", Attribution),
             Errors = errors, Warnings = warnings
         };

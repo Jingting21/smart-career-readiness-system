@@ -31,6 +31,17 @@ public sealed class CareerCatalogModelConfigurationTests
             [nameof(CareerSkill.CareerId), nameof(CareerSkill.SkillId)],
             careerSkill.FindPrimaryKey()!.Properties.Select(property => property.Name));
 
+        var careerTask = Entity<CareerTask>();
+        Assert.Equal(nameof(CareerTask.CareerTaskId), Assert.Single(careerTask.FindPrimaryKey()!.Properties).Name);
+        AssertUniqueIndex(careerTask, nameof(CareerTask.CareerId), nameof(CareerTask.OnetTaskId));
+
+        AssertUniqueIndex(Entity<CareerEducationRating>(), nameof(CareerEducationRating.CareerId),
+            nameof(CareerEducationRating.ElementId), nameof(CareerEducationRating.ScaleId), nameof(CareerEducationRating.Category));
+        AssertUniqueIndex(Entity<CareerTrainingRating>(), nameof(CareerTrainingRating.CareerId),
+            nameof(CareerTrainingRating.ElementId), nameof(CareerTrainingRating.ScaleId), nameof(CareerTrainingRating.Category));
+        Assert.Equal(nameof(JobZoneDefinition.JobZone), Assert.Single(Entity<JobZoneDefinition>().FindPrimaryKey()!.Properties).Name);
+        AssertUniqueIndex(Entity<CareerJobZone>(), nameof(CareerJobZone.CareerId));
+
         var source = Entity<CareerCatalogSource>();
         Assert.Equal(
             nameof(CareerCatalogSource.CareerCatalogSourceId),
@@ -77,6 +88,25 @@ public sealed class CareerCatalogModelConfigurationTests
         Assert.Equal(2, requiredLevel.GetScale());
         AssertProperty<CareerSkill>(nameof(CareerSkill.SourceVersion), required: true, maxLength: 20, columnType: "varchar(20)");
 
+        AssertProperty<CareerTask>(nameof(CareerTask.Statement), required: true, maxLength: 1000);
+        AssertProperty<CareerTask>(nameof(CareerTask.TaskType), required: false, maxLength: 20);
+        AssertProperty<CareerTask>(nameof(CareerTask.SourceUpdatedOn), required: false, columnType: "date");
+        AssertProperty<CareerTask>(nameof(CareerTask.DomainSource), required: true, maxLength: 50);
+        AssertProperty<CareerTask>(nameof(CareerTask.SourceVersion), required: true, maxLength: 20, columnType: "varchar(20)");
+
+        AssertRatingShape<CareerEducationRating>();
+        AssertRatingShape<CareerTrainingRating>();
+        AssertProperty<JobZoneDefinition>(nameof(JobZoneDefinition.Name), required: true, maxLength: 100);
+        AssertProperty<JobZoneDefinition>(nameof(JobZoneDefinition.Experience), required: true, maxLength: 1000);
+        AssertProperty<JobZoneDefinition>(nameof(JobZoneDefinition.Education), required: true, maxLength: 1000);
+        AssertProperty<JobZoneDefinition>(nameof(JobZoneDefinition.JobTraining), required: true, maxLength: 1000);
+        AssertProperty<JobZoneDefinition>(nameof(JobZoneDefinition.Examples), required: true, maxLength: 1000);
+        AssertProperty<JobZoneDefinition>(nameof(JobZoneDefinition.SvpRange), required: true, maxLength: 30, columnType: "varchar(30)");
+        AssertProperty<JobZoneDefinition>(nameof(JobZoneDefinition.SourceVersion), required: true, maxLength: 20, columnType: "varchar(20)");
+        AssertProperty<CareerJobZone>(nameof(CareerJobZone.SourceUpdatedOn), required: false, columnType: "date");
+        AssertProperty<CareerJobZone>(nameof(CareerJobZone.DomainSource), required: true, maxLength: 50);
+        AssertProperty<CareerJobZone>(nameof(CareerJobZone.SourceVersion), required: true, maxLength: 20, columnType: "varchar(20)");
+
         AssertProperty<CareerCatalogSource>(nameof(CareerCatalogSource.SourceName), required: true, maxLength: 50);
         AssertProperty<CareerCatalogSource>(nameof(CareerCatalogSource.SourceVersion), required: true, maxLength: 20, columnType: "varchar(20)");
         AssertProperty<CareerCatalogSource>(nameof(CareerCatalogSource.OfficialSourceUrl), required: true, maxLength: 500, columnType: "varchar(500)");
@@ -98,11 +128,31 @@ public sealed class CareerCatalogModelConfigurationTests
     }
 
     [Fact]
+    public void EducationPreparationChecksPreserveSupportedScalesAndValidRanges()
+    {
+        var educationSql = Entity<CareerEducationRating>().GetCheckConstraints().Select(item => item.Sql).ToList();
+        Assert.Contains(educationSql, sql => sql.Contains("[ScaleId] IN ('RL', 'RQ')", StringComparison.Ordinal));
+        Assert.Contains(educationSql, sql => sql.Contains("[Percentage] IS NULL", StringComparison.Ordinal));
+
+        var trainingSql = Entity<CareerTrainingRating>().GetCheckConstraints().Select(item => item.Sql).ToList();
+        Assert.Contains(trainingSql, sql => sql.Contains("[ScaleId] IN ('RW', 'PT', 'OJ')", StringComparison.Ordinal));
+        Assert.Contains(trainingSql, sql => sql.Contains("[Percentage] IS NULL", StringComparison.Ordinal));
+
+        var jobZone = Assert.Single(Entity<JobZoneDefinition>().GetCheckConstraints());
+        Assert.Contains("BETWEEN 1 AND 5", jobZone.Sql, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void CatalogRelationshipsUseRestrictiveDeleteBehavior()
     {
         AssertForeignKey<Career>(nameof(Career.CategoryId), typeof(CareerCategory));
         AssertForeignKey<CareerSkill>(nameof(CareerSkill.CareerId), typeof(Career));
         AssertForeignKey<CareerSkill>(nameof(CareerSkill.SkillId), typeof(Skill));
+        AssertForeignKey<CareerTask>(nameof(CareerTask.CareerId), typeof(Career));
+        AssertForeignKey<CareerEducationRating>(nameof(CareerEducationRating.CareerId), typeof(Career));
+        AssertForeignKey<CareerTrainingRating>(nameof(CareerTrainingRating.CareerId), typeof(Career));
+        AssertForeignKey<CareerJobZone>(nameof(CareerJobZone.CareerId), typeof(Career));
+        AssertForeignKey<CareerJobZone>(nameof(CareerJobZone.JobZone), typeof(JobZoneDefinition));
         Assert.Empty(Entity<CareerCatalogSource>().GetForeignKeys());
     }
 
@@ -123,6 +173,28 @@ public sealed class CareerCatalogModelConfigurationTests
         Assert.Equal(!required, property.IsNullable);
         if (maxLength.HasValue) Assert.Equal(maxLength, property.GetMaxLength());
         if (columnType is not null) Assert.Equal(columnType, property.GetColumnType());
+    }
+
+    private void AssertRatingShape<TEntity>() where TEntity : class
+    {
+        AssertProperty<TEntity>("ElementId", required: true, maxLength: 20, columnType: "varchar(20)");
+        AssertProperty<TEntity>("ScaleId", required: true, maxLength: 3, columnType: "varchar(3)");
+        AssertProperty<TEntity>("CategoryDescription", required: true, maxLength: 500);
+        AssertPrecision<TEntity>("Percentage", 6, 2, nullable: true);
+        AssertPrecision<TEntity>("StandardError", 10, 4, nullable: true);
+        AssertPrecision<TEntity>("LowerConfidenceBound", 10, 4, nullable: true);
+        AssertPrecision<TEntity>("UpperConfidenceBound", 10, 4, nullable: true);
+        AssertProperty<TEntity>("SourceUpdatedOn", required: false, columnType: "date");
+        AssertProperty<TEntity>("DomainSource", required: true, maxLength: 50);
+        AssertProperty<TEntity>("SourceVersion", required: true, maxLength: 20, columnType: "varchar(20)");
+    }
+
+    private void AssertPrecision<TEntity>(string name, int precision, int scale, bool nullable) where TEntity : class
+    {
+        var property = Entity<TEntity>().FindProperty(name)!;
+        Assert.Equal(nullable, property.IsNullable);
+        Assert.Equal(precision, property.GetPrecision());
+        Assert.Equal(scale, property.GetScale());
     }
 
     private static void AssertUniqueIndex(IEntityType entity, params string[] propertyNames)

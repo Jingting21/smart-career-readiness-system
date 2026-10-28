@@ -112,6 +112,9 @@
                             <span class="career-category">@career.CategoryName</span>
                             <h3>@career.Title</h3>
                             <p>@career.Description</p>
+                            <a class="career-card-link" asp-route="CareerDetails"
+                               asp-route-occupationCode="@career.OccupationCode" asp-route-query="@Model.Query"
+                               asp-route-category="@Model.SelectedCategorySlug" asp-route-page="@Model.CurrentPage">View Details <span aria-hidden="true">→</span></a>
                         </article>
                     }
                 </div>

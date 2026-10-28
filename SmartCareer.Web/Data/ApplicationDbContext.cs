@@ -12,6 +12,11 @@ namespace SmartCareer.Web.Data
         public DbSet<Career> Careers => Set<Career>();
         public DbSet<Skill> Skills => Set<Skill>();
         public DbSet<CareerSkill> CareerSkills => Set<CareerSkill>();
+        public DbSet<CareerTask> CareerTasks => Set<CareerTask>();
+        public DbSet<CareerEducationRating> CareerEducationRatings => Set<CareerEducationRating>();
+        public DbSet<CareerTrainingRating> CareerTrainingRatings => Set<CareerTrainingRating>();
+        public DbSet<JobZoneDefinition> JobZoneDefinitions => Set<JobZoneDefinition>();
+        public DbSet<CareerJobZone> CareerJobZones => Set<CareerJobZone>();
         public DbSet<CareerCatalogSource> CareerCatalogSources => Set<CareerCatalogSource>();
 
         public ApplicationDbContext(
@@ -194,6 +199,100 @@ namespace SmartCareer.Web.Data
                     .HasForeignKey(careerSkill => careerSkill.SkillId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
+
+            modelBuilder.Entity<CareerTask>(entity =>
+            {
+                entity.HasKey(task => task.CareerTaskId);
+                entity.Property(task => task.Statement).HasMaxLength(1000).IsRequired();
+                entity.Property(task => task.TaskType).HasMaxLength(20);
+                entity.Property(task => task.Importance).HasPrecision(5, 2);
+                entity.Property(task => task.Relevance).HasPrecision(5, 2);
+                entity.Property(task => task.SourceUpdatedOn).HasColumnType("date");
+                entity.Property(task => task.DomainSource).HasMaxLength(50).IsRequired();
+                entity.Property(task => task.SourceVersion)
+                    .HasColumnType("varchar(20)").HasMaxLength(20).IsUnicode(false).IsRequired();
+                entity.HasIndex(task => new { task.CareerId, task.OnetTaskId }).IsUnique();
+                entity.HasIndex(task => new { task.CareerId, task.TaskType, task.Importance });
+                entity.HasOne(task => task.Career).WithMany(career => career.CareerTasks)
+                    .HasForeignKey(task => task.CareerId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<CareerEducationRating>(entity =>
+            {
+                entity.ToTable(table =>
+                {
+                    table.HasCheckConstraint("CK_CareerEducationRatings_ScaleId", "[ScaleId] IN ('RL', 'RQ')");
+                    table.HasCheckConstraint("CK_CareerEducationRatings_Category", "[Category] > 0");
+                    table.HasCheckConstraint("CK_CareerEducationRatings_Percentage", "[Percentage] IS NULL OR ([Percentage] >= 0 AND [Percentage] <= 100)");
+                    table.HasCheckConstraint("CK_CareerEducationRatings_RespondentCount", "[RespondentCount] IS NULL OR [RespondentCount] >= 0");
+                });
+                entity.HasKey(rating => rating.CareerEducationRatingId);
+                ConfigureRating(entity);
+                entity.HasIndex(rating => new { rating.CareerId, rating.ElementId, rating.ScaleId, rating.Category }).IsUnique();
+                entity.HasIndex(rating => new { rating.CareerId, rating.ScaleId, rating.Percentage });
+                entity.HasOne(rating => rating.Career).WithMany(career => career.CareerEducationRatings)
+                    .HasForeignKey(rating => rating.CareerId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<CareerTrainingRating>(entity =>
+            {
+                entity.ToTable(table =>
+                {
+                    table.HasCheckConstraint("CK_CareerTrainingRatings_ScaleId", "[ScaleId] IN ('RW', 'PT', 'OJ')");
+                    table.HasCheckConstraint("CK_CareerTrainingRatings_Category", "[Category] > 0");
+                    table.HasCheckConstraint("CK_CareerTrainingRatings_Percentage", "[Percentage] IS NULL OR ([Percentage] >= 0 AND [Percentage] <= 100)");
+                    table.HasCheckConstraint("CK_CareerTrainingRatings_RespondentCount", "[RespondentCount] IS NULL OR [RespondentCount] >= 0");
+                });
+                entity.HasKey(rating => rating.CareerTrainingRatingId);
+                ConfigureRating(entity);
+                entity.HasIndex(rating => new { rating.CareerId, rating.ElementId, rating.ScaleId, rating.Category }).IsUnique();
+                entity.HasIndex(rating => new { rating.CareerId, rating.ElementId, rating.ScaleId, rating.Percentage });
+                entity.HasOne(rating => rating.Career).WithMany(career => career.CareerTrainingRatings)
+                    .HasForeignKey(rating => rating.CareerId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<JobZoneDefinition>(entity =>
+            {
+                entity.ToTable(table => table.HasCheckConstraint("CK_JobZoneDefinitions_JobZone", "[JobZone] BETWEEN 1 AND 5"));
+                entity.HasKey(definition => definition.JobZone);
+                entity.Property(definition => definition.JobZone).ValueGeneratedNever();
+                entity.Property(definition => definition.Name).HasMaxLength(100).IsRequired();
+                entity.Property(definition => definition.Experience).HasMaxLength(1000).IsRequired();
+                entity.Property(definition => definition.Education).HasMaxLength(1000).IsRequired();
+                entity.Property(definition => definition.JobTraining).HasMaxLength(1000).IsRequired();
+                entity.Property(definition => definition.Examples).HasMaxLength(1000).IsRequired();
+                entity.Property(definition => definition.SvpRange).HasColumnType("varchar(30)").HasMaxLength(30).IsUnicode(false).IsRequired();
+                entity.Property(definition => definition.SourceVersion).HasColumnType("varchar(20)").HasMaxLength(20).IsUnicode(false).IsRequired();
+            });
+
+            modelBuilder.Entity<CareerJobZone>(entity =>
+            {
+                entity.HasKey(assignment => assignment.CareerJobZoneId);
+                entity.Property(assignment => assignment.SourceUpdatedOn).HasColumnType("date");
+                entity.Property(assignment => assignment.DomainSource).HasMaxLength(50).IsRequired();
+                entity.Property(assignment => assignment.SourceVersion).HasColumnType("varchar(20)").HasMaxLength(20).IsUnicode(false).IsRequired();
+                entity.HasIndex(assignment => assignment.CareerId).IsUnique();
+                entity.HasIndex(assignment => new { assignment.JobZone, assignment.CareerId });
+                entity.HasOne(assignment => assignment.Career).WithOne(career => career.CareerJobZone)
+                    .HasForeignKey<CareerJobZone>(assignment => assignment.CareerId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(assignment => assignment.JobZoneDefinition).WithMany(definition => definition.CareerJobZones)
+                    .HasForeignKey(assignment => assignment.JobZone).OnDelete(DeleteBehavior.Restrict);
+            });
+        }
+
+        private static void ConfigureRating<TEntity>(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<TEntity> entity)
+            where TEntity : class
+        {
+            entity.Property("ElementId").HasColumnType("varchar(20)").HasMaxLength(20).IsUnicode(false).IsRequired();
+            entity.Property("ScaleId").HasColumnType("varchar(3)").HasMaxLength(3).IsUnicode(false).IsRequired();
+            entity.Property("CategoryDescription").HasMaxLength(500).IsRequired();
+            entity.Property("Percentage").HasPrecision(6, 2);
+            entity.Property("StandardError").HasPrecision(10, 4);
+            entity.Property("LowerConfidenceBound").HasPrecision(10, 4);
+            entity.Property("UpperConfidenceBound").HasPrecision(10, 4);
+            entity.Property("SourceUpdatedOn").HasColumnType("date");
+            entity.Property("DomainSource").HasMaxLength(50).IsRequired();
+            entity.Property("SourceVersion").HasColumnType("varchar(20)").HasMaxLength(20).IsUnicode(false).IsRequired();
         }
     }
 }

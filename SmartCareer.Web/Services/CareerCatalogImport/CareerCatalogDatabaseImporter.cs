@@ -28,19 +28,43 @@ public sealed class CareerCatalogDatabaseImporter(ApplicationDbContext dbContext
             await dbContext.Careers.CountAsync(cancellationToken),
             await dbContext.Skills.CountAsync(cancellationToken),
             await dbContext.CareerSkills.CountAsync(cancellationToken),
-            await dbContext.CareerCatalogSources.CountAsync(cancellationToken)
+            await dbContext.CareerCatalogSources.CountAsync(cancellationToken),
+            await dbContext.CareerTasks.CountAsync(cancellationToken)
         };
 
         if (existingCounts.Any(count => count != 0))
         {
-            if (await MatchesExactlyAsync(plan, cancellationToken))
+            if (!await MatchesExactlyAsync(plan, cancellationToken, includeTasks: false))
             {
-                return CareerCatalogDatabaseImportOutcome.AlreadyCurrent;
+                throw new InvalidOperationException(
+                    "Career catalogue tables are not empty and do not exactly match this import plan. " +
+                    "No records were changed; destructive replacement is intentionally unsupported.");
             }
 
-            throw new InvalidOperationException(
-                "Career catalogue tables are not empty and do not exactly match this import plan. " +
-                "No records were changed; destructive replacement is intentionally unsupported.");
+            var existingTaskCount = await dbContext.CareerTasks.CountAsync(cancellationToken);
+            if (existingTaskCount != plan.CareerTasks.Count ||
+                !await MatchesTasksExactlyAsync(plan, cancellationToken))
+            {
+                if (existingTaskCount != 0)
+                    throw new InvalidOperationException("Career task data is partial or does not match the validated plan. No records were changed.");
+                await InsertTasksIntoExistingCatalogueAsync(plan, cancellationToken);
+            }
+
+            if (await MatchesPreparationExactlyAsync(plan, cancellationToken))
+                return CareerCatalogDatabaseImportOutcome.AlreadyCurrent;
+
+            var preparationCounts = new[]
+            {
+                await dbContext.CareerEducationRatings.CountAsync(cancellationToken),
+                await dbContext.CareerTrainingRatings.CountAsync(cancellationToken),
+                await dbContext.JobZoneDefinitions.CountAsync(cancellationToken),
+                await dbContext.CareerJobZones.CountAsync(cancellationToken)
+            };
+            if (preparationCounts.Any(count => count != 0))
+                throw new InvalidOperationException("Education and preparation data is partial or does not match the validated plan. No records were changed.");
+
+            await InsertPreparationIntoExistingCatalogueAsync(plan, cancellationToken);
+            return CareerCatalogDatabaseImportOutcome.Imported;
         }
 
         IDbContextTransaction? transaction = null;
@@ -123,6 +147,15 @@ public sealed class CareerCatalogDatabaseImporter(ApplicationDbContext dbContext
             dbContext.Skills.AddRange(skills.Values);
             dbContext.CareerSkills.AddRange(links);
             dbContext.CareerCatalogSources.AddRange(sources);
+            dbContext.CareerTasks.AddRange(plan.CareerTasks.Select(record => new CareerTask
+            {
+                Career = careers[record.OccupationCode], OnetTaskId = record.OnetTaskId,
+                Statement = record.Statement, TaskType = record.TaskType, Importance = record.Importance,
+                Relevance = record.Relevance, IncumbentsResponding = record.IncumbentsResponding,
+                SourceUpdatedOn = record.SourceUpdatedOn, DomainSource = record.DomainSource,
+                SourceVersion = record.SourceVersion
+            }));
+            AddPreparationEntities(plan, careers.ToDictionary(item => item.Key, item => item.Value.CareerId, StringComparer.Ordinal), careers);
             await dbContext.SaveChangesAsync(cancellationToken);
 
             if (transaction is not null)
@@ -151,7 +184,8 @@ public sealed class CareerCatalogDatabaseImporter(ApplicationDbContext dbContext
 
     private async Task<bool> MatchesExactlyAsync(
         CareerCatalogImportPlan plan,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool includeTasks = true)
     {
         if (await dbContext.CareerCategories.CountAsync(cancellationToken) != plan.Categories.Count ||
             await dbContext.Careers.CountAsync(cancellationToken) != plan.Careers.Count ||
@@ -211,9 +245,169 @@ public sealed class CareerCatalogDatabaseImporter(ApplicationDbContext dbContext
         var linkLookup = links.ToDictionary(
             link => (link.Career.OccupationCode, link.Skill.ExternalSkillCode),
             link => link);
-        return plan.CareerSkills.All(record =>
+        var baseMatches = plan.CareerSkills.All(record =>
             linkLookup.TryGetValue((record.OccupationCode, record.ExternalSkillCode), out var entity) &&
             entity.Importance == record.Importance && entity.RequiredLevel == record.RequiredLevel &&
             entity.SourceVersion == record.SourceVersion);
+        return baseMatches && (!includeTasks || await MatchesTasksExactlyAsync(plan, cancellationToken));
     }
+
+    private async Task InsertTasksIntoExistingCatalogueAsync(
+        CareerCatalogImportPlan plan, CancellationToken cancellationToken)
+    {
+        IDbContextTransaction? transaction = null;
+        if (dbContext.Database.IsRelational()) transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            var careerIds = await dbContext.Careers.AsNoTracking()
+                .ToDictionaryAsync(career => career.OccupationCode, career => career.CareerId, StringComparer.Ordinal, cancellationToken);
+            dbContext.CareerTasks.AddRange(plan.CareerTasks.Select(record => new CareerTask
+            {
+                CareerId = careerIds[record.OccupationCode], OnetTaskId = record.OnetTaskId,
+                Statement = record.Statement, TaskType = record.TaskType, Importance = record.Importance,
+                Relevance = record.Relevance, IncumbentsResponding = record.IncumbentsResponding,
+                SourceUpdatedOn = record.SourceUpdatedOn, DomainSource = record.DomainSource,
+                SourceVersion = record.SourceVersion
+            }));
+            await dbContext.SaveChangesAsync(cancellationToken);
+            if (transaction is not null) await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            if (transaction is not null) await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+        finally
+        {
+            if (transaction is not null) await transaction.DisposeAsync();
+        }
+    }
+
+    private async Task<bool> MatchesTasksExactlyAsync(
+        CareerCatalogImportPlan plan, CancellationToken cancellationToken)
+    {
+        if (await dbContext.CareerTasks.CountAsync(cancellationToken) != plan.CareerTasks.Count) return false;
+        var tasks = await dbContext.CareerTasks.AsNoTracking().Include(task => task.Career)
+            .ToDictionaryAsync(task => (task.Career.OccupationCode, task.OnetTaskId), cancellationToken);
+        return plan.CareerTasks.All(record =>
+            tasks.TryGetValue((record.OccupationCode, record.OnetTaskId), out var entity) &&
+            entity.Statement == record.Statement && entity.TaskType == record.TaskType &&
+            entity.Importance == record.Importance && entity.Relevance == record.Relevance &&
+            entity.IncumbentsResponding == record.IncumbentsResponding &&
+            entity.SourceUpdatedOn == record.SourceUpdatedOn && entity.DomainSource == record.DomainSource &&
+            entity.SourceVersion == record.SourceVersion);
+    }
+
+    private async Task InsertPreparationIntoExistingCatalogueAsync(
+        CareerCatalogImportPlan plan, CancellationToken cancellationToken)
+    {
+        await using var transaction = dbContext.Database.IsRelational()
+            ? await dbContext.Database.BeginTransactionAsync(cancellationToken)
+            : null;
+        try
+        {
+            var careerIds = await dbContext.Careers.AsNoTracking().ToDictionaryAsync(
+                career => career.OccupationCode, career => career.CareerId, StringComparer.Ordinal, cancellationToken);
+            AddPreparationEntities(plan, careerIds);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            if (transaction is not null) await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            if (transaction is not null) await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    private void AddPreparationEntities(
+        CareerCatalogImportPlan plan,
+        IReadOnlyDictionary<string, int> careerIds,
+        IReadOnlyDictionary<string, Career>? newCareers = null)
+    {
+        Career ResolveCareer(string code) => newCareers is not null
+            ? newCareers[code]
+            : dbContext.Careers.Local.Single(career => career.CareerId == careerIds[code]);
+
+        dbContext.JobZoneDefinitions.AddRange(plan.JobZoneDefinitions.Select(record => new JobZoneDefinition
+        {
+            JobZone = record.JobZone, Name = record.Name, Experience = record.Experience,
+            Education = record.Education, JobTraining = record.JobTraining, Examples = record.Examples,
+            SvpRange = record.SvpRange, SourceVersion = record.SourceVersion
+        }));
+        dbContext.CareerEducationRatings.AddRange(plan.EducationRatings.Select(record => new CareerEducationRating
+        {
+            CareerId = newCareers is null ? careerIds[record.OccupationCode] : 0,
+            Career = newCareers is null ? null! : ResolveCareer(record.OccupationCode),
+            ElementId = record.ElementId, ScaleId = record.ScaleId, Category = record.Category,
+            CategoryDescription = record.CategoryDescription, Percentage = record.Percentage,
+            RespondentCount = record.RespondentCount, StandardError = record.StandardError,
+            LowerConfidenceBound = record.LowerConfidenceBound, UpperConfidenceBound = record.UpperConfidenceBound,
+            IsSuppressed = record.IsSuppressed, SourceUpdatedOn = record.SourceUpdatedOn,
+            DomainSource = record.DomainSource, SourceVersion = record.SourceVersion
+        }));
+        dbContext.CareerTrainingRatings.AddRange(plan.TrainingRatings.Select(record => new CareerTrainingRating
+        {
+            CareerId = newCareers is null ? careerIds[record.OccupationCode] : 0,
+            Career = newCareers is null ? null! : ResolveCareer(record.OccupationCode),
+            ElementId = record.ElementId, ScaleId = record.ScaleId, Category = record.Category,
+            CategoryDescription = record.CategoryDescription, Percentage = record.Percentage,
+            RespondentCount = record.RespondentCount, StandardError = record.StandardError,
+            LowerConfidenceBound = record.LowerConfidenceBound, UpperConfidenceBound = record.UpperConfidenceBound,
+            IsSuppressed = record.IsSuppressed, SourceUpdatedOn = record.SourceUpdatedOn,
+            DomainSource = record.DomainSource, SourceVersion = record.SourceVersion
+        }));
+        dbContext.CareerJobZones.AddRange(plan.CareerJobZones.Select(record => new CareerJobZone
+        {
+            CareerId = newCareers is null ? careerIds[record.OccupationCode] : 0,
+            Career = newCareers is null ? null! : ResolveCareer(record.OccupationCode),
+            JobZone = record.JobZone, SourceUpdatedOn = record.SourceUpdatedOn,
+            DomainSource = record.DomainSource, SourceVersion = record.SourceVersion
+        }));
+    }
+
+    private async Task<bool> MatchesPreparationExactlyAsync(
+        CareerCatalogImportPlan plan, CancellationToken cancellationToken)
+    {
+        if (await dbContext.CareerEducationRatings.CountAsync(cancellationToken) != plan.EducationRatings.Count ||
+            await dbContext.CareerTrainingRatings.CountAsync(cancellationToken) != plan.TrainingRatings.Count ||
+            await dbContext.JobZoneDefinitions.CountAsync(cancellationToken) != plan.JobZoneDefinitions.Count ||
+            await dbContext.CareerJobZones.CountAsync(cancellationToken) != plan.CareerJobZones.Count)
+            return false;
+
+        var education = await dbContext.CareerEducationRatings.AsNoTracking().Include(item => item.Career)
+            .ToDictionaryAsync(item => (item.Career.OccupationCode, item.ElementId, item.ScaleId, item.Category), cancellationToken);
+        var training = await dbContext.CareerTrainingRatings.AsNoTracking().Include(item => item.Career)
+            .ToDictionaryAsync(item => (item.Career.OccupationCode, item.ElementId, item.ScaleId, item.Category), cancellationToken);
+        var definitions = await dbContext.JobZoneDefinitions.AsNoTracking().ToDictionaryAsync(item => item.JobZone, cancellationToken);
+        var assignments = await dbContext.CareerJobZones.AsNoTracking().Include(item => item.Career)
+            .ToDictionaryAsync(item => item.Career.OccupationCode, StringComparer.Ordinal, cancellationToken);
+
+        return plan.EducationRatings.All(record => education.TryGetValue(
+                   (record.OccupationCode, record.ElementId, record.ScaleId, record.Category), out var entity) &&
+               RatingMatches(record, entity)) &&
+            plan.TrainingRatings.All(record => training.TryGetValue(
+                   (record.OccupationCode, record.ElementId, record.ScaleId, record.Category), out var entity) &&
+               RatingMatches(record, entity)) &&
+            plan.JobZoneDefinitions.All(record => definitions.TryGetValue(record.JobZone, out var entity) &&
+               entity.Name == record.Name && entity.Experience == record.Experience && entity.Education == record.Education &&
+               entity.JobTraining == record.JobTraining && entity.Examples == record.Examples &&
+               entity.SvpRange == record.SvpRange && entity.SourceVersion == record.SourceVersion) &&
+            plan.CareerJobZones.All(record => assignments.TryGetValue(record.OccupationCode, out var entity) &&
+               entity.JobZone == record.JobZone && entity.SourceUpdatedOn == record.SourceUpdatedOn &&
+               entity.DomainSource == record.DomainSource && entity.SourceVersion == record.SourceVersion);
+    }
+
+    private static bool RatingMatches(CareerEducationRatingImportRecord record, CareerEducationRating entity) =>
+        entity.CategoryDescription == record.CategoryDescription && entity.Percentage == record.Percentage &&
+        entity.RespondentCount == record.RespondentCount && entity.StandardError == record.StandardError &&
+        entity.LowerConfidenceBound == record.LowerConfidenceBound && entity.UpperConfidenceBound == record.UpperConfidenceBound &&
+        entity.IsSuppressed == record.IsSuppressed && entity.SourceUpdatedOn == record.SourceUpdatedOn &&
+        entity.DomainSource == record.DomainSource && entity.SourceVersion == record.SourceVersion;
+
+    private static bool RatingMatches(CareerTrainingRatingImportRecord record, CareerTrainingRating entity) =>
+        entity.CategoryDescription == record.CategoryDescription && entity.Percentage == record.Percentage &&
+        entity.RespondentCount == record.RespondentCount && entity.StandardError == record.StandardError &&
+        entity.LowerConfidenceBound == record.LowerConfidenceBound && entity.UpperConfidenceBound == record.UpperConfidenceBound &&
+        entity.IsSuppressed == record.IsSuppressed && entity.SourceUpdatedOn == record.SourceUpdatedOn &&
+        entity.DomainSource == record.DomainSource && entity.SourceVersion == record.SourceVersion;
 }

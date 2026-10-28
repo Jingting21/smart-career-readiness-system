@@ -1,0 +1,16 @@
+@model SmartCareer.Web.ViewModels.PreparationDistributionViewModel
+<article class="preparation-card" aria-labelledby="preparation-@Model.ScaleId.ToLowerInvariant()">
+    <h3 id="preparation-@Model.ScaleId.ToLowerInvariant()">@Model.Heading</h3>
+    <p class="preparation-label">@Model.MostCommonLabel</p>
+    <ul class="preparation-highlights">
+        @foreach (var response in Model.MostCommonResponses) {
+            <li><span>@response.CategoryDescription</span><strong>@response.Percentage.ToString("0.##")%</strong></li>
+        }
+    </ul>
+    <p class="preparation-help">The percentage is the share of usable O*NET responses reporting this category.</p>
+    @if (Model.AllResponses.Count > Model.MostCommonResponses.Count) {
+        <details class="preparation-distribution"><summary>View all response categories</summary>
+            <ul>@foreach (var response in Model.AllResponses) { <li><span>@response.CategoryDescription</span><strong>@response.Percentage.ToString("0.##")%</strong></li> }</ul>
+        </details>
+    }
+</article>

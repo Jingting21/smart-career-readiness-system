@@ -22,6 +22,17 @@ public sealed class CareerCatalogImportTests
         Assert.Equal(10, plan.Skills.Count(skill => skill.SkillCategory == "Essential"));
         Assert.Equal(25, plan.Skills.Count(skill => skill.SkillCategory == "Transferable"));
         Assert.Equal(6125, plan.CareerSkills.Count);
+        Assert.Equal(3724, plan.CareerTasks.Count);
+        Assert.Equal(2955, plan.CareerTasks.Count(task => task.TaskType == "Core"));
+        Assert.Equal(702, plan.CareerTasks.Count(task => task.TaskType == "Supplemental"));
+        Assert.Equal(67, plan.CareerTasks.Count(task => task.TaskType is null));
+        Assert.Equal(69, plan.CareerTasks.Count(task => task.Importance is null));
+        Assert.Equal(175, plan.CareerTasks.Select(task => task.OccupationCode).Distinct().Count());
+        Assert.Equal(plan.CareerTasks.Count, plan.CareerTasks.Select(task => (task.OccupationCode, task.OnetTaskId)).Distinct().Count());
+        Assert.Equal(2064, plan.EducationRatings.Count);
+        Assert.Equal(4988, plan.TrainingRatings.Count);
+        Assert.Equal(4, plan.JobZoneDefinitions.Count);
+        Assert.Equal(175, plan.CareerJobZones.Count);
         Assert.Single(plan.Sources);
         Assert.Equal(
             plan.Careers.OrderBy(career => career.OccupationCode, StringComparer.Ordinal),
@@ -33,6 +44,39 @@ public sealed class CareerCatalogImportTests
             plan.CareerSkills.OrderBy(link => link.OccupationCode, StringComparer.Ordinal)
                 .ThenBy(link => link.ExternalSkillCode, StringComparer.Ordinal),
             plan.CareerSkills);
+    }
+
+    [Fact]
+    public void EducationPreparationPlanPreservesScopeJoinsSuppressionMissingDataAndJobZones()
+    {
+        var plan = Plan.Value;
+        var approved = plan.Careers.Select(item => item.OccupationCode).ToHashSet(StringComparer.Ordinal);
+        var missing = new[] { "11-9013.00", "13-1041.00", "17-2111.00" };
+
+        Assert.All(plan.EducationRatings, item =>
+        {
+            Assert.Contains(item.OccupationCode, approved);
+            Assert.Contains(item.ScaleId, new[] { "RL", "RQ" });
+            Assert.False(string.IsNullOrWhiteSpace(item.CategoryDescription));
+        });
+        Assert.All(plan.TrainingRatings, item =>
+        {
+            Assert.Contains(item.OccupationCode, approved);
+            Assert.Contains(item.ScaleId, new[] { "RW", "PT", "OJ" });
+            Assert.False(string.IsNullOrWhiteSpace(item.ElementId));
+            Assert.False(string.IsNullOrWhiteSpace(item.CategoryDescription));
+        });
+        Assert.Equal(42, plan.EducationRatings.Count(item => item.IsSuppressed));
+        Assert.Equal(119, plan.TrainingRatings.Count(item => item.IsSuppressed));
+        Assert.Equal(0, plan.EducationRatings.Count(item => item.Percentage is null));
+        Assert.Equal(0, plan.TrainingRatings.Count(item => item.Percentage is null));
+        Assert.All(plan.EducationRatings.Where(item => item.IsSuppressed), item => Assert.NotNull(item.Percentage));
+        Assert.All(plan.TrainingRatings.Where(item => item.IsSuppressed), item => Assert.NotNull(item.Percentage));
+        Assert.Equal(missing, approved.Except(plan.EducationRatings.Select(item => item.OccupationCode)).Order());
+        Assert.Equal(missing, approved.Except(plan.TrainingRatings.Select(item => item.OccupationCode)).Order());
+        Assert.Equal([2, 3, 4, 5], plan.JobZoneDefinitions.Select(item => item.JobZone));
+        Assert.Equal(approved.Order(), plan.CareerJobZones.Select(item => item.OccupationCode).Order());
+        Assert.Equal(175, plan.CareerJobZones.Select(item => item.OccupationCode).Distinct().Count());
     }
 
     [Fact]
@@ -181,6 +225,11 @@ public sealed class CareerCatalogImportTests
         Assert.Equal(175, await context.Careers.CountAsync());
         Assert.Equal(35, await context.Skills.CountAsync());
         Assert.Equal(6125, await context.CareerSkills.CountAsync());
+        Assert.Equal(3724, await context.CareerTasks.CountAsync());
+        Assert.Equal(2064, await context.CareerEducationRatings.CountAsync());
+        Assert.Equal(4988, await context.CareerTrainingRatings.CountAsync());
+        Assert.Equal(4, await context.JobZoneDefinitions.CountAsync());
+        Assert.Equal(175, await context.CareerJobZones.CountAsync());
         Assert.Equal(CareerCatalogDatabaseImportOutcome.AlreadyCurrent, await importer.ApplyAsync(Plan.Value));
 
         var source = await context.CareerCatalogSources.SingleAsync();
@@ -293,6 +342,11 @@ public sealed class CareerCatalogImportTests
         Assert.Equal(0, await verificationContext.Careers.CountAsync());
         Assert.Equal(0, await verificationContext.Skills.CountAsync());
         Assert.Equal(0, await verificationContext.CareerSkills.CountAsync());
+        Assert.Equal(0, await verificationContext.CareerTasks.CountAsync());
+        Assert.Equal(0, await verificationContext.CareerEducationRatings.CountAsync());
+        Assert.Equal(0, await verificationContext.CareerTrainingRatings.CountAsync());
+        Assert.Equal(0, await verificationContext.JobZoneDefinitions.CountAsync());
+        Assert.Equal(0, await verificationContext.CareerJobZones.CountAsync());
     }
 
     [Fact]
@@ -345,7 +399,7 @@ public sealed class CareerCatalogImportTests
             "localhost",
             "DESKTOP-N7746K8",
             "SmartCareerDB",
-            ["20261023181916_AddCareerCatalogProvenanceAndReview"],
+            ["20261028162141_AddEducationAndPreparationSchema"],
             [],
             0, 0, 0, 0, 0);
 

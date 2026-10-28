@@ -1,0 +1,53 @@
+@model SmartCareer.Web.ViewModels.CareerDetailsViewModel
+@{ ViewData["Title"] = Model.Title; }
+<div class="career-details">
+    <a class="back-link" asp-controller="Careers" asp-action="Index" asp-route-query="@Model.ExplorerQuery" asp-route-category="@Model.ExplorerCategory" asp-route-page="@Model.ExplorerPage" asp-fragment="career-results">← Back to Career Explorer</a>
+    <header class="career-detail-hero career-detail-hero-compact"><span class="career-category">@Model.CategoryName</span><h1>@Model.Title</h1>
+        @if (Model.HasDifferentSourceTitle) { <p class="source-title">O*NET source title: <strong>@Model.SourceTitle</strong></p> }</header>
+    @if (Model.RequiresLocalReview) { <aside class="career-notice review career-review-notice"><strong>Local verification recommended</strong><p>Some details for this occupation need additional Malaysian context. Check current local professional, education and employment requirements before making decisions.</p></aside> }
+    <section class="career-detail-section career-overview" aria-labelledby="overview-heading"><h2 id="overview-heading">Career Overview</h2><p class="career-description">@Model.Description</p></section>
+    @if (Model.TypicalTasks.Count > 0) {
+        const int initiallyVisibleTasks = 6;
+        <section class="career-detail-section career-tasks" aria-labelledby="tasks-heading"><h2 id="tasks-heading">Typical Tasks</h2>
+            <p class="task-context">These are examples of tasks associated with this occupation in the United States. Actual responsibilities may vary by employer and country.</p>
+            <ol class="career-task-list">@foreach (var task in Model.TypicalTasks.Take(initiallyVisibleTasks)) { <li>@task.Statement</li> }</ol>
+            @if (Model.TypicalTasks.Count > initiallyVisibleTasks) {
+                <details class="skill-expander task-expander"><summary><span class="show-all-label">Show All Typical Tasks (@Model.TypicalTasks.Count)</span><span class="show-less-label">Show Less</span></summary>
+                    <ol class="career-task-list expanded-task-list" start="@(initiallyVisibleTasks + 1)">@foreach (var task in Model.TypicalTasks.Skip(initiallyVisibleTasks)) { <li>@task.Statement</li> }</ol>
+                </details>
+            }
+        </section>
+    }
+    <section class="career-detail-section education-preparation" aria-labelledby="education-preparation-heading">
+        <h2 id="education-preparation-heading">Education &amp; Preparation</h2>
+        <aside class="preparation-context"><strong>US occupational preparation data</strong><p>These education, experience and training figures describe responses collected for occupations in the United States. They are not mandatory qualifications or licensing requirements in Malaysia.</p></aside>
+        @if (!Model.HasEducationOrTraining) { <p class="preparation-missing" role="status">Education or training information is not available in the current O*NET dataset.</p> }
+        else {
+            <div class="preparation-grid">
+                @foreach (var distribution in Model.EducationBackgrounds) { <partial name="_PreparationDistribution" model="distribution" /> }
+                @if (Model.RelatedWorkExperience is not null) { <partial name="_PreparationDistribution" model="Model.RelatedWorkExperience" /> }
+                @if (Model.OnSiteTraining is not null) { <partial name="_PreparationDistribution" model="Model.OnSiteTraining" /> }
+                @if (Model.OnTheJobTraining is not null) { <partial name="_PreparationDistribution" model="Model.OnTheJobTraining" /> }
+            </div>
+        }
+        @if (Model.JobZone is not null) {
+            <article class="job-zone-card" aria-labelledby="job-zone-heading"><div class="job-zone-heading"><span>Job Zone @Model.JobZone.Number</span><h3 id="job-zone-heading">@Model.JobZone.Name</h3></div>
+                <p class="preparation-help">Job Zones describe typical preparation for occupations in the United States. They are not Malaysian licensing or university entry requirements.</p>
+                <dl><div><dt>Education</dt><dd>@Model.JobZone.Education</dd></div><div><dt>Experience</dt><dd>@Model.JobZone.Experience</dd></div><div><dt>Training</dt><dd>@Model.JobZone.JobTraining</dd></div></dl>
+            </article>
+        }
+    </section>
+    @if (!string.IsNullOrWhiteSpace(Model.Responsibilities)) { <section class="career-detail-section"><h2>Responsibilities</h2><p class="pre-line">@Model.Responsibilities</p></section> }
+    @if (!string.IsNullOrWhiteSpace(Model.Qualifications)) { <section class="career-detail-section"><h2>Qualifications</h2><p class="pre-line">@Model.Qualifications</p></section> }
+    <section class="career-detail-section career-skills" aria-labelledby="skills-heading"><h2 id="skills-heading">Associated Skills</h2>
+        <aside class="occupational-rating-note"><strong>These are occupational ratings, not personal skill or readiness scores.</strong></aside>
+        <div class="rating-explanation"><p><strong>Importance (1–5):</strong> 1 means not important and 5 means extremely important for this occupation.</p><p><strong>Required level (0–7):</strong> describes the degree of skill typically needed for this occupation, not a student's ability.</p></div>
+        <section class="skill-group-section" aria-labelledby="essential-skills-heading"><div class="skill-group-heading"><h3 id="essential-skills-heading">Essential Skills</h3><span>@Model.EssentialSkills.Count skills</span></div><partial name="_CareerSkillList" model="Model.EssentialSkills" /></section>
+        <section class="skill-group-section" aria-labelledby="transferable-skills-heading"><div class="skill-group-heading"><h3 id="transferable-skills-heading">Transferable Skills</h3><span>@Model.TransferableSkills.Count skills</span></div><partial name="_CareerSkillList" model="Model.TransferableSkills" /></section>
+    </section>
+    <section class="career-detail-section provenance source-context" aria-labelledby="source-heading"><h2 id="source-heading">Source &amp; Malaysia Context</h2>
+        <aside class="career-notice"><strong>Using this information in Malaysia</strong><p>O*NET information is US-based. Malaysian education, licensing and entry requirements may differ. Verify local requirements with the relevant Malaysian authorities, institutions or employers.</p></aside>
+        <dl><div><dt>Source</dt><dd>@Model.Provenance.SourceName @Model.Provenance.SourceVersion</dd></div><div><dt>Retrieved</dt><dd>@Model.Provenance.RetrievedOn.ToString("d MMMM yyyy")</dd></div>
+        <div><dt>Official source</dt><dd><a href="@Model.Provenance.OfficialSourceUrl" target="_blank" rel="noopener noreferrer">View official O*NET source<span class="visually-hidden"> (opens in a new tab)</span></a></dd></div><div><dt>Licence</dt><dd><a href="@Model.Provenance.LicenseUrl" target="_blank" rel="noopener noreferrer">@Model.Provenance.LicenseName<span class="visually-hidden"> (opens in a new tab)</span></a></dd></div></dl>
+        <p class="attribution">@Model.Provenance.AttributionText</p></section>
+</div>

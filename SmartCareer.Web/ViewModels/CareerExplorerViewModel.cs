@@ -24,6 +24,7 @@ public sealed record CareerCategoryFilterViewModel(
     int ActiveCareerCount);
 
 public sealed record CareerCardViewModel(
+    string OccupationCode,
     string Title,
     string CategoryName,
     string CategorySlug,

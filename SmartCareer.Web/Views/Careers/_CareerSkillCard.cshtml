@@ -1,0 +1,8 @@
+@model SmartCareer.Web.ViewModels.CareerSkillViewModel
+<article class="career-skill-card">
+    <div class="skill-card-copy"><h4>@Model.Name</h4>@if (!string.IsNullOrWhiteSpace(Model.Description)) { <p>@Model.Description</p> }</div>
+    <div class="skill-rating"><div class="skill-rating-heading"><span>How important is this skill?</span><strong>@Model.Importance.ToString("0.00") out of 5</strong></div>
+        <progress max="5" value="@Model.Importance" aria-label="Importance rating for @Model.Name: @Model.Importance.ToString("0.00") out of 5">@Model.Importance.ToString("0.00") out of 5</progress></div>
+    <div class="skill-rating"><div class="skill-rating-heading"><span>What skill level is typically needed?</span>@if (Model.RequiredLevel.HasValue) { <strong>@Model.RequiredLevel.Value.ToString("0.00") out of 7</strong> } else { <strong>Level data not available</strong> }</div>
+        @if (Model.RequiredLevel.HasValue) { <progress max="7" value="@Model.RequiredLevel.Value" aria-label="Required level rating for @Model.Name: @Model.RequiredLevel.Value.ToString("0.00") out of 7">@Model.RequiredLevel.Value.ToString("0.00") out of 7</progress> }</div>
+</article>

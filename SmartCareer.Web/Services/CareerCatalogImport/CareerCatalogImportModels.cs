@@ -41,6 +41,38 @@ public sealed record CareerSkillImportRecord(
     decimal? RequiredLevel,
     string SourceVersion);
 
+public sealed record CareerTaskImportRecord(
+    string OccupationCode,
+    int OnetTaskId,
+    string Statement,
+    string? TaskType,
+    decimal? Importance,
+    decimal? Relevance,
+    int? IncumbentsResponding,
+    DateOnly? SourceUpdatedOn,
+    string DomainSource,
+    string SourceVersion);
+
+public sealed record CareerEducationRatingImportRecord(
+    string OccupationCode, string ElementId, string ScaleId, int Category,
+    string CategoryDescription, decimal? Percentage, int? RespondentCount,
+    decimal? StandardError, decimal? LowerConfidenceBound, decimal? UpperConfidenceBound,
+    bool IsSuppressed, DateOnly? SourceUpdatedOn, string DomainSource, string SourceVersion);
+
+public sealed record CareerTrainingRatingImportRecord(
+    string OccupationCode, string ElementId, string ScaleId, int Category,
+    string CategoryDescription, decimal? Percentage, int? RespondentCount,
+    decimal? StandardError, decimal? LowerConfidenceBound, decimal? UpperConfidenceBound,
+    bool IsSuppressed, DateOnly? SourceUpdatedOn, string DomainSource, string SourceVersion);
+
+public sealed record JobZoneDefinitionImportRecord(
+    int JobZone, string Name, string Experience, string Education,
+    string JobTraining, string Examples, string SvpRange, string SourceVersion);
+
+public sealed record CareerJobZoneImportRecord(
+    string OccupationCode, int JobZone, DateOnly? SourceUpdatedOn,
+    string DomainSource, string SourceVersion);
+
 public sealed record CareerCatalogProvenance(
     string Dataset,
     string ReleaseDate,
@@ -57,6 +89,11 @@ public sealed class CareerCatalogImportPlan
     public required IReadOnlyList<CareerImportRecord> Careers { get; init; }
     public required IReadOnlyList<SkillImportRecord> Skills { get; init; }
     public required IReadOnlyList<CareerSkillImportRecord> CareerSkills { get; init; }
+    public required IReadOnlyList<CareerTaskImportRecord> CareerTasks { get; init; }
+    public required IReadOnlyList<CareerEducationRatingImportRecord> EducationRatings { get; init; }
+    public required IReadOnlyList<CareerTrainingRatingImportRecord> TrainingRatings { get; init; }
+    public required IReadOnlyList<JobZoneDefinitionImportRecord> JobZoneDefinitions { get; init; }
+    public required IReadOnlyList<CareerJobZoneImportRecord> CareerJobZones { get; init; }
     public required IReadOnlyList<CareerCatalogSourceImportRecord> Sources { get; init; }
     public required CareerCatalogProvenance Provenance { get; init; }
     public required IReadOnlyList<string> Errors { get; init; }
@@ -78,6 +115,14 @@ public sealed record CareerCatalogDatasetPaths(string RootDirectory)
     public string TransferableSkillsPath => Path.Combine(RawDirectory, "transferable_skills.json");
     public string ContentModelPath => Path.Combine(RawDirectory, "content_model_reference.json");
     public string ScalesPath => Path.Combine(RawDirectory, "scales_reference.json");
+    public string TaskStatementsPath => Path.Combine(RawDirectory, "task_statements.json");
+    public string TaskRatingsPath => Path.Combine(RawDirectory, "task_ratings.json");
+    public string EducationPath => Path.Combine(RawDirectory, "education.json");
+    public string EducationCategoriesPath => Path.Combine(RawDirectory, "education_categories.json");
+    public string TrainingAndExperiencePath => Path.Combine(RawDirectory, "training_and_experience.json");
+    public string TrainingAndExperienceCategoriesPath => Path.Combine(RawDirectory, "training_and_experience_categories.json");
+    public string JobZonesPath => Path.Combine(RawDirectory, "job_zones.json");
+    public string JobZoneReferencePath => Path.Combine(RawDirectory, "job_zone_reference.json");
 }
 
 public sealed record CareerCatalogDryRunReport(

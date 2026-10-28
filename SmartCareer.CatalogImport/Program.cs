@@ -88,7 +88,10 @@ try
     Console.WriteLine($"Dataset: {CareerCatalogImportGuard.RequiredDataset}");
     Console.WriteLine($"Records: {plan.Sources.Count} source, {plan.Categories.Count} categories, " +
                       $"{plan.Careers.Count} careers, {plan.Skills.Count} skills, " +
-                      $"{plan.CareerSkills.Count} career-skill relationships");
+                      $"{plan.CareerSkills.Count} career-skill relationships, " +
+                      $"{plan.CareerTasks.Count} career tasks, {plan.EducationRatings.Count} education ratings, " +
+                      $"{plan.TrainingRatings.Count} training ratings, {plan.JobZoneDefinitions.Count} Job Zone definitions, " +
+                      $"{plan.CareerJobZones.Count} career Job Zone assignments");
     Console.WriteLine($"Intended operation: {intendedOperation}");
 
     var outcome = await new CareerCatalogDatabaseImporter(dbContext).ApplyAsync(plan);

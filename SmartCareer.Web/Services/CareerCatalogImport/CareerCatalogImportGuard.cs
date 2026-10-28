@@ -30,7 +30,7 @@ public static class CareerCatalogImportGuard
     public const string RequiredDatabase = "SmartCareerDB";
     public const string RequiredServer = "DESKTOP-N7746K8";
     public const string RequiredDataset = "O*NET 31.0";
-    public const string RequiredMigration = "20261023181916_AddCareerCatalogProvenanceAndReview";
+    public const string RequiredMigration = "20261028162141_AddEducationAndPreparationSchema";
 
     public static IReadOnlyList<string> Validate(
         CareerCatalogImportConfirmation confirmation,

@@ -122,9 +122,9 @@ public sealed class CareerExplorerTests
         Assert.Contains("SelectedCategoryName", view);
         Assert.Contains("No careers matched your search", view);
         Assert.Contains("Career catalogue unavailable", view);
-        Assert.DoesNotContain("OccupationCode", view);
         Assert.DoesNotContain("LocalReviewNote", view);
-        Assert.DoesNotContain("asp-action=\"Details\"", view);
+        Assert.Contains("asp-route=\"CareerDetails\"", view);
+        Assert.Contains("asp-route-occupationCode=\"@career.OccupationCode\"", view);
         Assert.Contains("asp-controller=\"Careers\" asp-action=\"Index\"", sidebar);
         Assert.DoesNotContain("asp-route-feature=\"Career Explorer\"", sidebar);
         Assert.Contains("<span class=\"status-label available\">Available</span>", dashboard);

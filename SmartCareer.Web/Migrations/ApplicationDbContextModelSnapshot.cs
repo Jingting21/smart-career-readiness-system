@@ -424,6 +424,130 @@ namespace SmartCareer.Web.Migrations
                     b.ToTable("CareerCategories");
                 });
 
+            modelBuilder.Entity("SmartCareer.Web.Models.CareerEducationRating", b =>
+                {
+                    b.Property<int>("CareerEducationRatingId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CareerEducationRatingId"));
+
+                    b.Property<int>("CareerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CategoryDescription")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("DomainSource")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ElementId")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<bool>("IsSuppressed")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal?>("LowerConfidenceBound")
+                        .HasPrecision(10, 4)
+                        .HasColumnType("decimal(10,4)");
+
+                    b.Property<decimal?>("Percentage")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("decimal(6,2)");
+
+                    b.Property<int?>("RespondentCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ScaleId")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(3)");
+
+                    b.Property<DateOnly?>("SourceUpdatedOn")
+                        .HasColumnType("date");
+
+                    b.Property<string>("SourceVersion")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<decimal?>("StandardError")
+                        .HasPrecision(10, 4)
+                        .HasColumnType("decimal(10,4)");
+
+                    b.Property<decimal?>("UpperConfidenceBound")
+                        .HasPrecision(10, 4)
+                        .HasColumnType("decimal(10,4)");
+
+                    b.HasKey("CareerEducationRatingId");
+
+                    b.HasIndex("CareerId", "ScaleId", "Percentage");
+
+                    b.HasIndex("CareerId", "ElementId", "ScaleId", "Category")
+                        .IsUnique();
+
+                    b.ToTable("CareerEducationRatings", t =>
+                        {
+                            t.HasCheckConstraint("CK_CareerEducationRatings_Category", "[Category] > 0");
+
+                            t.HasCheckConstraint("CK_CareerEducationRatings_Percentage", "[Percentage] IS NULL OR ([Percentage] >= 0 AND [Percentage] <= 100)");
+
+                            t.HasCheckConstraint("CK_CareerEducationRatings_RespondentCount", "[RespondentCount] IS NULL OR [RespondentCount] >= 0");
+
+                            t.HasCheckConstraint("CK_CareerEducationRatings_ScaleId", "[ScaleId] IN ('RL', 'RQ')");
+                        });
+                });
+
+            modelBuilder.Entity("SmartCareer.Web.Models.CareerJobZone", b =>
+                {
+                    b.Property<int>("CareerJobZoneId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CareerJobZoneId"));
+
+                    b.Property<int>("CareerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DomainSource")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("JobZone")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly?>("SourceUpdatedOn")
+                        .HasColumnType("date");
+
+                    b.Property<string>("SourceVersion")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.HasKey("CareerJobZoneId");
+
+                    b.HasIndex("CareerId")
+                        .IsUnique();
+
+                    b.HasIndex("JobZone", "CareerId");
+
+                    b.ToTable("CareerJobZones");
+                });
+
             modelBuilder.Entity("SmartCareer.Web.Models.CareerSkill", b =>
                 {
                     b.Property<int>("CareerId")
@@ -451,6 +575,200 @@ namespace SmartCareer.Web.Migrations
                     b.HasIndex("SkillId", "CareerId");
 
                     b.ToTable("CareerSkills");
+                });
+
+            modelBuilder.Entity("SmartCareer.Web.Models.CareerTask", b =>
+                {
+                    b.Property<int>("CareerTaskId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CareerTaskId"));
+
+                    b.Property<int>("CareerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DomainSource")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal?>("Importance")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<int?>("IncumbentsResponding")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OnetTaskId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("Relevance")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<DateOnly?>("SourceUpdatedOn")
+                        .HasColumnType("date");
+
+                    b.Property<string>("SourceVersion")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("Statement")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("TaskType")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("CareerTaskId");
+
+                    b.HasIndex("CareerId", "OnetTaskId")
+                        .IsUnique();
+
+                    b.HasIndex("CareerId", "TaskType", "Importance");
+
+                    b.ToTable("CareerTasks");
+                });
+
+            modelBuilder.Entity("SmartCareer.Web.Models.CareerTrainingRating", b =>
+                {
+                    b.Property<int>("CareerTrainingRatingId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CareerTrainingRatingId"));
+
+                    b.Property<int>("CareerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CategoryDescription")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("DomainSource")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ElementId")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<bool>("IsSuppressed")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal?>("LowerConfidenceBound")
+                        .HasPrecision(10, 4)
+                        .HasColumnType("decimal(10,4)");
+
+                    b.Property<decimal?>("Percentage")
+                        .HasPrecision(6, 2)
+                        .HasColumnType("decimal(6,2)");
+
+                    b.Property<int?>("RespondentCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ScaleId")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(3)");
+
+                    b.Property<DateOnly?>("SourceUpdatedOn")
+                        .HasColumnType("date");
+
+                    b.Property<string>("SourceVersion")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<decimal?>("StandardError")
+                        .HasPrecision(10, 4)
+                        .HasColumnType("decimal(10,4)");
+
+                    b.Property<decimal?>("UpperConfidenceBound")
+                        .HasPrecision(10, 4)
+                        .HasColumnType("decimal(10,4)");
+
+                    b.HasKey("CareerTrainingRatingId");
+
+                    b.HasIndex("CareerId", "ElementId", "ScaleId", "Category")
+                        .IsUnique();
+
+                    b.HasIndex("CareerId", "ElementId", "ScaleId", "Percentage");
+
+                    b.ToTable("CareerTrainingRatings", t =>
+                        {
+                            t.HasCheckConstraint("CK_CareerTrainingRatings_Category", "[Category] > 0");
+
+                            t.HasCheckConstraint("CK_CareerTrainingRatings_Percentage", "[Percentage] IS NULL OR ([Percentage] >= 0 AND [Percentage] <= 100)");
+
+                            t.HasCheckConstraint("CK_CareerTrainingRatings_RespondentCount", "[RespondentCount] IS NULL OR [RespondentCount] >= 0");
+
+                            t.HasCheckConstraint("CK_CareerTrainingRatings_ScaleId", "[ScaleId] IN ('RW', 'PT', 'OJ')");
+                        });
+                });
+
+            modelBuilder.Entity("SmartCareer.Web.Models.JobZoneDefinition", b =>
+                {
+                    b.Property<int>("JobZone")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Education")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Examples")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Experience")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("JobTraining")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("SourceVersion")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("SvpRange")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(30)");
+
+                    b.HasKey("JobZone");
+
+                    b.ToTable("JobZoneDefinitions", t =>
+                        {
+                            t.HasCheckConstraint("CK_JobZoneDefinitions_JobZone", "[JobZone] BETWEEN 1 AND 5");
+                        });
                 });
 
             modelBuilder.Entity("SmartCareer.Web.Models.Skill", b =>
@@ -558,6 +876,36 @@ namespace SmartCareer.Web.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("SmartCareer.Web.Models.CareerEducationRating", b =>
+                {
+                    b.HasOne("SmartCareer.Web.Models.Career", "Career")
+                        .WithMany("CareerEducationRatings")
+                        .HasForeignKey("CareerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Career");
+                });
+
+            modelBuilder.Entity("SmartCareer.Web.Models.CareerJobZone", b =>
+                {
+                    b.HasOne("SmartCareer.Web.Models.Career", "Career")
+                        .WithOne("CareerJobZone")
+                        .HasForeignKey("SmartCareer.Web.Models.CareerJobZone", "CareerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SmartCareer.Web.Models.JobZoneDefinition", "JobZoneDefinition")
+                        .WithMany("CareerJobZones")
+                        .HasForeignKey("JobZone")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Career");
+
+                    b.Navigation("JobZoneDefinition");
+                });
+
             modelBuilder.Entity("SmartCareer.Web.Models.CareerSkill", b =>
                 {
                     b.HasOne("SmartCareer.Web.Models.Career", "Career")
@@ -577,14 +925,49 @@ namespace SmartCareer.Web.Migrations
                     b.Navigation("Skill");
                 });
 
+            modelBuilder.Entity("SmartCareer.Web.Models.CareerTask", b =>
+                {
+                    b.HasOne("SmartCareer.Web.Models.Career", "Career")
+                        .WithMany("CareerTasks")
+                        .HasForeignKey("CareerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Career");
+                });
+
+            modelBuilder.Entity("SmartCareer.Web.Models.CareerTrainingRating", b =>
+                {
+                    b.HasOne("SmartCareer.Web.Models.Career", "Career")
+                        .WithMany("CareerTrainingRatings")
+                        .HasForeignKey("CareerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Career");
+                });
+
             modelBuilder.Entity("SmartCareer.Web.Models.Career", b =>
                 {
+                    b.Navigation("CareerEducationRatings");
+
+                    b.Navigation("CareerJobZone");
+
                     b.Navigation("CareerSkills");
+
+                    b.Navigation("CareerTasks");
+
+                    b.Navigation("CareerTrainingRatings");
                 });
 
             modelBuilder.Entity("SmartCareer.Web.Models.CareerCategory", b =>
                 {
                     b.Navigation("Careers");
+                });
+
+            modelBuilder.Entity("SmartCareer.Web.Models.JobZoneDefinition", b =>
+                {
+                    b.Navigation("CareerJobZones");
                 });
 
             modelBuilder.Entity("SmartCareer.Web.Models.Skill", b =>

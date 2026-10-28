@@ -9,6 +9,8 @@ namespace SmartCareer.Web.Controllers;
 [Route("Careers")]
 public sealed class CareersController(ICareerCatalogQueryService careerCatalog) : Controller
 {
+    public const string DetailsRouteName = "CareerDetails";
+
     [HttpGet("")]
     public async Task<IActionResult> Index(
         string? query,
@@ -35,5 +37,13 @@ public sealed class CareersController(ICareerCatalogQueryService careerCatalog) 
         }
 
         return View(result.ViewModel);
+    }
+
+    [HttpGet("{occupationCode}", Name = DetailsRouteName)]
+    public async Task<IActionResult> Details(string occupationCode, string? query, string? category, int page = 1,
+        CancellationToken cancellationToken = default)
+    {
+        var viewModel = await careerCatalog.GetDetailsAsync(occupationCode, query, category, page, cancellationToken);
+        return viewModel is null ? NotFound() : View(viewModel);
     }
 }
