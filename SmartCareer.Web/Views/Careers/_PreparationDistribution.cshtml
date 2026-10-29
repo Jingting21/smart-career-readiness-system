@@ -7,7 +7,14 @@
             <li><span>@response.CategoryDescription</span><strong>@response.Percentage.ToString("0.##")%</strong></li>
         }
     </ul>
-    <p class="preparation-help">The percentage is the share of usable O*NET responses reporting this category.</p>
+    @if (Model.ScaleId == "RW") {
+        <p class="preparation-help">This shows how much related work experience is commonly reported for this career. It is not a compulsory experience requirement for every job.</p>
+    }
+    else {
+        @foreach (var response in Model.MostCommonResponses) {
+            <p class="preparation-help">@response.Percentage.ToString("0.##")% of usable survey responses selected @response.CategoryDescription for this career.</p>
+        }
+    }
     @if (Model.AllResponses.Count > Model.MostCommonResponses.Count) {
         <details class="preparation-distribution"><summary>View all response categories</summary>
             <ul>@foreach (var response in Model.AllResponses) { <li><span>@response.CategoryDescription</span><strong>@response.Percentage.ToString("0.##")%</strong></li> }</ul>

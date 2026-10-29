@@ -100,7 +100,7 @@ public sealed class CareerDetailsTests
     }
 
     [Fact]
-    public async Task DetailsBuildsUsableEducationTrainingDistributionsWithTiesAndZeroValues()
+    public async Task DetailsBuildsUsableEducationAndExperienceDistributionsWithTiesAndZeroValues()
     {
         await using var context = CreateContext();
         Seed(context);
@@ -115,9 +115,6 @@ public sealed class CareerDetailsTests
         Assert.DoesNotContain(rl.AllResponses, item => item.CategoryDescription is "Suppressed" or "Missing");
 
         Assert.Equal(2, result.RelatedWorkExperience!.MostCommonResponses.Count);
-        Assert.Equal("PT", result.OnSiteTraining!.ScaleId);
-        Assert.Equal("OJ", result.OnTheJobTraining!.ScaleId);
-        Assert.Contains(result.OnTheJobTraining.AllResponses, item => item.Percentage == 0m);
         Assert.Equal(4, result.JobZone!.Number);
         Assert.Equal("Zone education", result.JobZone.Education);
         Assert.Equal("Zone experience", result.JobZone.Experience);
@@ -132,7 +129,7 @@ public sealed class CareerDetailsTests
         var result = await new CareerCatalogQueryService(context).GetDetailsAsync("11-9013.00", null, null, 1);
 
         Assert.NotNull(result);
-        Assert.False(result.HasEducationOrTraining);
+        Assert.False(result.HasEducationOrExperience);
         Assert.Empty(result.EducationBackgrounds);
         Assert.Null(result.RelatedWorkExperience);
         Assert.NotNull(result.JobZone);
@@ -180,18 +177,38 @@ public sealed class CareerDetailsTests
         Assert.Contains("Show Less", detail);
         Assert.Contains("Actual responsibilities may vary by employer and country", detail);
         Assert.Contains("Education &amp; Preparation", detail);
-        Assert.Contains("not mandatory qualifications or licensing requirements in Malaysia", detail);
-        Assert.Contains("Education or training information is not available in the current O*NET dataset", detail);
-        Assert.Contains("Job Zones describe typical preparation", detail);
+        Assert.Contains("not mandatory Malaysian education, employment or licensing requirements", detail);
+        Assert.Contains("Education background data is not available", detail);
+        Assert.Contains("Related work experience data is not available", detail);
+        Assert.Contains("Job Zone shows the general level of education, experience and training", detail);
+        Assert.DoesNotContain("On-Site/In-Plant Training", detail);
+        Assert.DoesNotContain("On-the-Job Training", detail);
         var preparation = ReadWebFile("Views", "Careers", "_PreparationDistribution.cshtml");
         Assert.Contains("MostCommonResponses", preparation);
         Assert.Contains("AllResponses", preparation);
         Assert.Contains("<details class=\"preparation-distribution\">", preparation);
         Assert.Contains("<summary>", preparation);
         Assert.Contains("View all response categories", preparation);
+        Assert.Contains("% of usable survey responses selected", preparation);
+        Assert.Contains("not a compulsory experience requirement for every job", preparation);
         var explorer = ReadWebFile("Views", "Careers", "Index.cshtml");
         Assert.Contains("asp-route=\"CareerDetails\"", explorer);
         Assert.DoesNotContain("asp-action=\"Details\"", explorer);
+    }
+
+    [Fact]
+    public void PreparationLayoutIsResponsiveAndUsesNativeAccessibleExpansionControls()
+    {
+        var detail = ReadWebFile("Views", "Careers", "Details.cshtml");
+        var preparation = ReadWebFile("Views", "Careers", "_PreparationDistribution.cshtml");
+        var css = ReadWebFile("wwwroot", "css", "site.css");
+
+        Assert.Contains("<div class=\"preparation-grid\">", detail);
+        Assert.Contains("<div class=\"preparation-column\">", detail);
+        Assert.Contains("<details class=\"preparation-distribution\">", preparation);
+        Assert.Contains("<summary>View all response categories</summary>", preparation);
+        Assert.Contains(".preparation-grid{display:grid;grid-template-columns:repeat(2", css);
+        Assert.Contains("@media(max-width:767.98px){.preparation-grid,.job-zone-card dl{grid-template-columns:1fr}", css);
     }
 
     [Fact]

@@ -424,6 +424,122 @@ namespace SmartCareer.Web.Migrations
                     b.ToTable("CareerCategories");
                 });
 
+            modelBuilder.Entity("SmartCareer.Web.Models.CareerDegreeField", b =>
+                {
+                    b.Property<int>("CareerDegreeFieldId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CareerDegreeFieldId"));
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CareerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ConfidenceLevel")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<int>("DegreeFieldId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("EvidenceSummary")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<bool>("IsPublished")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("MalaysianNecCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<string>("OriginalCipCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<string>("OriginalSocCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<bool>("ProfessionalRegulationFlag")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("RelatedFieldDatasetSourceId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RelationshipType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<DateOnly?>("RevalidationDueOn")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("ReviewDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("ReviewStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<string>("ReviewedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ReviewerNotes")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("SourceUrls")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SourceVersions")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.HasKey("CareerDegreeFieldId");
+
+                    b.HasIndex("DegreeFieldId");
+
+                    b.HasIndex("RelatedFieldDatasetSourceId");
+
+                    b.HasIndex("CareerId", "DegreeFieldId")
+                        .IsUnique();
+
+                    b.HasIndex("ReviewStatus", "IsPublished");
+
+                    b.ToTable("CareerDegreeFields", t =>
+                        {
+                            t.HasCheckConstraint("CK_CareerDegreeFields_ConfidenceLevel", "[ConfidenceLevel] IN ('High', 'Medium', 'Low')");
+
+                            t.HasCheckConstraint("CK_CareerDegreeFields_Publication", "([ReviewStatus] = 'Approved' AND [ReviewedBy] IS NOT NULL AND [ApprovedAt] IS NOT NULL) OR ([ReviewStatus] <> 'Approved' AND [IsPublished] = 0 AND [ApprovedAt] IS NULL)");
+
+                            t.HasCheckConstraint("CK_CareerDegreeFields_RelationshipType", "[RelationshipType] IN ('Primary', 'Related', 'Alternative', 'Specialised')");
+
+                            t.HasCheckConstraint("CK_CareerDegreeFields_ReviewStatus", "[ReviewStatus] IN ('Draft', 'In Review', 'Approved', 'Rejected', 'Needs Revalidation')");
+                        });
+                });
+
             modelBuilder.Entity("SmartCareer.Web.Models.CareerEducationRating", b =>
                 {
                     b.Property<int>("CareerEducationRatingId")
@@ -721,6 +837,54 @@ namespace SmartCareer.Web.Migrations
                         });
                 });
 
+            modelBuilder.Entity("SmartCareer.Web.Models.DegreeField", b =>
+                {
+                    b.Property<int>("DegreeFieldId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DegreeFieldId"));
+
+                    b.Property<string>("CanonicalName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("ClassificationCode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("ClassificationSystem")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("ClassificationVersion")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.HasKey("DegreeFieldId");
+
+                    b.HasIndex("ClassificationSystem", "ClassificationCode", "ClassificationVersion")
+                        .IsUnique();
+
+                    b.ToTable("DegreeFields");
+                });
+
             modelBuilder.Entity("SmartCareer.Web.Models.JobZoneDefinition", b =>
                 {
                     b.Property<int>("JobZone")
@@ -769,6 +933,40 @@ namespace SmartCareer.Web.Migrations
                         {
                             t.HasCheckConstraint("CK_JobZoneDefinitions_JobZone", "[JobZone] BETWEEN 1 AND 5");
                         });
+                });
+
+            modelBuilder.Entity("SmartCareer.Web.Models.RelatedFieldDatasetSource", b =>
+                {
+                    b.Property<int>("RelatedFieldDatasetSourceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RelatedFieldDatasetSourceId"));
+
+                    b.Property<string>("DatasetVersion")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("MappingFileName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateOnly>("RetrievedOn")
+                        .HasColumnType("date");
+
+                    b.Property<string>("SourceMetadataJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("RelatedFieldDatasetSourceId");
+
+                    b.HasIndex("DatasetVersion")
+                        .IsUnique();
+
+                    b.ToTable("RelatedFieldDatasetSources");
                 });
 
             modelBuilder.Entity("SmartCareer.Web.Models.Skill", b =>
@@ -876,6 +1074,33 @@ namespace SmartCareer.Web.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("SmartCareer.Web.Models.CareerDegreeField", b =>
+                {
+                    b.HasOne("SmartCareer.Web.Models.Career", "Career")
+                        .WithMany("CareerDegreeFields")
+                        .HasForeignKey("CareerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SmartCareer.Web.Models.DegreeField", "DegreeField")
+                        .WithMany("CareerDegreeFields")
+                        .HasForeignKey("DegreeFieldId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SmartCareer.Web.Models.RelatedFieldDatasetSource", "DatasetSource")
+                        .WithMany("CareerDegreeFields")
+                        .HasForeignKey("RelatedFieldDatasetSourceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Career");
+
+                    b.Navigation("DatasetSource");
+
+                    b.Navigation("DegreeField");
+                });
+
             modelBuilder.Entity("SmartCareer.Web.Models.CareerEducationRating", b =>
                 {
                     b.HasOne("SmartCareer.Web.Models.Career", "Career")
@@ -949,6 +1174,8 @@ namespace SmartCareer.Web.Migrations
 
             modelBuilder.Entity("SmartCareer.Web.Models.Career", b =>
                 {
+                    b.Navigation("CareerDegreeFields");
+
                     b.Navigation("CareerEducationRatings");
 
                     b.Navigation("CareerJobZone");
@@ -965,9 +1192,19 @@ namespace SmartCareer.Web.Migrations
                     b.Navigation("Careers");
                 });
 
+            modelBuilder.Entity("SmartCareer.Web.Models.DegreeField", b =>
+                {
+                    b.Navigation("CareerDegreeFields");
+                });
+
             modelBuilder.Entity("SmartCareer.Web.Models.JobZoneDefinition", b =>
                 {
                     b.Navigation("CareerJobZones");
+                });
+
+            modelBuilder.Entity("SmartCareer.Web.Models.RelatedFieldDatasetSource", b =>
+                {
+                    b.Navigation("CareerDegreeFields");
                 });
 
             modelBuilder.Entity("SmartCareer.Web.Models.Skill", b =>

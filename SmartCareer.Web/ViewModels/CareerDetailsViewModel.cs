@@ -16,11 +16,8 @@ public sealed class CareerDetailsViewModel
     public IReadOnlyList<CareerTaskViewModel> TypicalTasks { get; init; } = [];
     public IReadOnlyList<PreparationDistributionViewModel> EducationBackgrounds { get; init; } = [];
     public PreparationDistributionViewModel? RelatedWorkExperience { get; init; }
-    public PreparationDistributionViewModel? OnSiteTraining { get; init; }
-    public PreparationDistributionViewModel? OnTheJobTraining { get; init; }
     public JobZoneViewModel? JobZone { get; init; }
-    public bool HasEducationOrTraining => EducationBackgrounds.Count > 0 || RelatedWorkExperience is not null ||
-        OnSiteTraining is not null || OnTheJobTraining is not null;
+    public bool HasEducationOrExperience => EducationBackgrounds.Count > 0 || RelatedWorkExperience is not null;
     public string? ExplorerQuery { get; init; }
     public string? ExplorerCategory { get; init; }
     public int ExplorerPage { get; init; } = 1;

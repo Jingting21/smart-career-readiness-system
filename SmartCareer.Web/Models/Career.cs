@@ -27,5 +27,6 @@ public sealed class Career
     public ICollection<CareerTask> CareerTasks { get; set; } = [];
     public ICollection<CareerEducationRating> CareerEducationRatings { get; set; } = [];
     public ICollection<CareerTrainingRating> CareerTrainingRatings { get; set; } = [];
+        public ICollection<CareerDegreeField> CareerDegreeFields { get; set; } = [];
     public CareerJobZone? CareerJobZone { get; set; }
 }

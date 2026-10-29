@@ -137,7 +137,7 @@ public sealed class CareerCatalogQueryService(ApplicationDbContext dbContext) : 
 
         var training = await dbContext.CareerTrainingRatings.AsNoTracking()
             .Where(rating => rating.CareerId == career.CareerId && !rating.IsSuppressed && rating.Percentage != null &&
-                (rating.ScaleId == "RW" || rating.ScaleId == "PT" || rating.ScaleId == "OJ"))
+                rating.ScaleId == "RW")
             .OrderBy(rating => rating.ScaleId).ThenByDescending(rating => rating.Percentage).ThenBy(rating => rating.Category)
             .Select(rating => new PreparationRatingRow(rating.ScaleId, rating.CategoryDescription, rating.Percentage!.Value))
             .ToListAsync(cancellationToken);
@@ -171,8 +171,6 @@ public sealed class CareerCatalogQueryService(ApplicationDbContext dbContext) : 
                     group.Select(item => new PreparationResponseViewModel(item.CategoryDescription, item.Percentage))))
                 .ToList(),
             RelatedWorkExperience = BuildTrainingDistribution(training, "RW", "Related Work Experience"),
-            OnSiteTraining = BuildTrainingDistribution(training, "PT", "On-Site/In-Plant Training"),
-            OnTheJobTraining = BuildTrainingDistribution(training, "OJ", "On-the-Job Training"),
             JobZone = jobZone,
             ExplorerQuery = explorerQuery, ExplorerCategory = explorerCategory, ExplorerPage = Math.Max(1, explorerPage)
         };

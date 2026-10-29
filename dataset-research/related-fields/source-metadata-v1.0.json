@@ -1,0 +1,76 @@
+{
+  "datasetVersion": "1.0",
+  "retrievedOn": "2026-10-29",
+  "sources": [
+    {
+      "sourceId": "ONET-31.0",
+      "organisation": "U.S. Department of Labor, Employment and Training Administration",
+      "title": "O*NET 31.0 Database",
+      "version": "31.0",
+      "officialUrl": "https://www.onetcenter.org/database.html",
+      "reuseTerms": "CC BY 4.0; attribution and modification notice required.",
+      "reuseTermsUrl": "https://www.onetcenter.org/license_db.html",
+      "identifiers": "O*NET-SOC 2019 occupation codes"
+    },
+    {
+      "sourceId": "NCES-CIP-SOC-2020-2018",
+      "organisation": "National Center for Education Statistics and U.S. Bureau of Labor Statistics",
+      "title": "CIP 2020 to SOC 2018 Crosswalk",
+      "version": "CIP 2020 / SOC 2018",
+      "officialUrl": "https://nces.ed.gov/ipeds/cipcode/Files/CIP2020_SOC2018_Crosswalk.xlsx",
+      "reuseTerms": "Public U.S. Department of Education/IES information; attribute NCES and retain the qualitative-crosswalk limitations.",
+      "reuseTermsUrl": "https://nces.ed.gov/about/public-access-research",
+      "identifiers": "Six-digit CIP 2020 and SOC 2018 codes"
+    },
+    {
+      "sourceId": "NEC-2020",
+      "organisation": "Ministry of Higher Education Malaysia and Malaysian Qualifications Agency",
+      "title": "National Education Code 2020",
+      "version": "NEC-2020, English publication updated 2022-02-16",
+      "officialUrl": "https://www2.mqa.gov.my/tvet/2020/document/2025/Kod%20Pendidikan%20Nasional%202020%20%28NEC-2020%29.pdf",
+      "reuseTerms": "No explicit bulk-redistribution licence located. This dataset records only short classification codes/titles with attribution and links.",
+      "reuseTermsUrl": "https://www.mqa.gov.my/new/pubs_form.cfm",
+      "identifiers": "Four-digit NEC-2020 detailed-field codes"
+    },
+    {
+      "sourceId": "MASCO-2020",
+      "organisation": "Ministry of Human Resources Malaysia / Department of Statistics Malaysia",
+      "title": "Malaysia Standard Classification of Occupations 2020",
+      "version": "MASCO-2020",
+      "officialUrl": "https://www.dosm.gov.my/v1/uploads/files/4_Portal%20Content/3_Methods%20%26%20Classifications/2_List%20of%20References/MASCO_2020_BI.pdf",
+      "reuseTerms": "Malaysian Government Open Data Terms of Use 1.0; source attribution and non-endorsement conditions apply.",
+      "reuseTermsUrl": "https://www.dosm.gov.my/portal-main/article/term-of-use",
+      "identifiers": "MASCO occupation groups and job titles; exact code matching remains a human-review task"
+    },
+    {
+      "sourceId": "MQA-MQR-LIVE",
+      "organisation": "Malaysian Qualifications Agency",
+      "title": "Malaysian Qualifications Register",
+      "version": "Live register checked 2026-10-29",
+      "officialUrl": "https://www.mqa.gov.my/mqr/english/ecarianakr.cfm",
+      "reuseTerms": "No explicit bulk-scraping or redistribution licence located. Do not mirror the register; store verified identifiers and official links only after human review.",
+      "reuseTermsUrl": "https://www.mqa.gov.my/mqr/english/ePeneranganPA.cfm",
+      "identifiers": "MQA/MQR programme references and NEC fields"
+    },
+    {
+      "sourceId": "MY-PROFESSIONAL-REGULATORS",
+      "organisation": "Relevant Malaysian statutory and professional regulators",
+      "title": "Current professional accreditation and registration requirements",
+      "version": "Live official pages checked 2026-10-29",
+      "officialUrl": "https://www.mqa.gov.my/mqr/english/ecarianakr.cfm",
+      "reuseTerms": "Link to current regulator guidance. Do not reproduce requirements as static guarantees of eligibility.",
+      "reuseTermsUrl": "https://www.mqa.gov.my/mqr/english/ePeneranganPA.cfm",
+      "identifiers": "MIA, BEM/EAC, LAM, Nursing Board Malaysia, LPQB and other regulator references"
+    },
+    {
+      "sourceId": "OFFICIAL-UNIVERSITY-PROGRAMMES",
+      "organisation": "Malaysian higher education providers",
+      "title": "Official programme descriptions",
+      "version": "Live pages checked 2026-10-29",
+      "officialUrl": "https://www.mqa.gov.my/mqr/english/ecarianakr.cfm",
+      "reuseTerms": "Programme pages remain institution-owned. Record programme titles, evidence summaries, URLs and retrieval dates; do not copy substantial descriptions.",
+      "reuseTermsUrl": "https://www.mqa.gov.my/mqr/english/ePeneranganPA.cfm",
+      "identifiers": "Institution programme titles and MQA references where available"
+    }
+  ]
+}

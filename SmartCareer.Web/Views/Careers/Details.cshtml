@@ -20,19 +20,20 @@
     }
     <section class="career-detail-section education-preparation" aria-labelledby="education-preparation-heading">
         <h2 id="education-preparation-heading">Education &amp; Preparation</h2>
-        <aside class="preparation-context"><strong>US occupational preparation data</strong><p>These education, experience and training figures describe responses collected for occupations in the United States. They are not mandatory qualifications or licensing requirements in Malaysia.</p></aside>
-        @if (!Model.HasEducationOrTraining) { <p class="preparation-missing" role="status">Education or training information is not available in the current O*NET dataset.</p> }
-        else {
-            <div class="preparation-grid">
-                @foreach (var distribution in Model.EducationBackgrounds) { <partial name="_PreparationDistribution" model="distribution" /> }
-                @if (Model.RelatedWorkExperience is not null) { <partial name="_PreparationDistribution" model="Model.RelatedWorkExperience" /> }
-                @if (Model.OnSiteTraining is not null) { <partial name="_PreparationDistribution" model="Model.OnSiteTraining" /> }
-                @if (Model.OnTheJobTraining is not null) { <partial name="_PreparationDistribution" model="Model.OnTheJobTraining" /> }
+        <aside class="preparation-context"><strong>US occupational preparation data</strong><p>O*NET survey distributions describe what people commonly reported in the United States. They are not mandatory Malaysian education, employment or licensing requirements.</p></aside>
+        <div class="preparation-grid">
+            <div class="preparation-column">
+                @if (Model.EducationBackgrounds.Count == 0) { <article class="preparation-card"><h3>Education Background</h3><p class="preparation-missing" role="status">Education background data is not available for this career in the current O*NET dataset.</p></article> }
+                else { @foreach (var distribution in Model.EducationBackgrounds) { <partial name="_PreparationDistribution" model="distribution" /> } }
             </div>
-        }
+            <div class="preparation-column">
+                @if (Model.RelatedWorkExperience is null) { <article class="preparation-card"><h3>Related Work Experience</h3><p class="preparation-missing" role="status">Related work experience data is not available for this career in the current O*NET dataset.</p></article> }
+                else { <partial name="_PreparationDistribution" model="Model.RelatedWorkExperience" /> }
+            </div>
+        </div>
         @if (Model.JobZone is not null) {
             <article class="job-zone-card" aria-labelledby="job-zone-heading"><div class="job-zone-heading"><span>Job Zone @Model.JobZone.Number</span><h3 id="job-zone-heading">@Model.JobZone.Name</h3></div>
-                <p class="preparation-help">Job Zones describe typical preparation for occupations in the United States. They are not Malaysian licensing or university entry requirements.</p>
+                <p class="job-zone-introduction">Job Zone shows the general level of education, experience and training commonly associated with this career in the United States.</p>
                 <dl><div><dt>Education</dt><dd>@Model.JobZone.Education</dd></div><div><dt>Experience</dt><dd>@Model.JobZone.Experience</dd></div><div><dt>Training</dt><dd>@Model.JobZone.JobTraining</dd></div></dl>
             </article>
         }

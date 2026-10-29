@@ -18,6 +18,9 @@ namespace SmartCareer.Web.Data
         public DbSet<JobZoneDefinition> JobZoneDefinitions => Set<JobZoneDefinition>();
         public DbSet<CareerJobZone> CareerJobZones => Set<CareerJobZone>();
         public DbSet<CareerCatalogSource> CareerCatalogSources => Set<CareerCatalogSource>();
+        public DbSet<DegreeField> DegreeFields => Set<DegreeField>();
+        public DbSet<CareerDegreeField> CareerDegreeFields => Set<CareerDegreeField>();
+        public DbSet<RelatedFieldDatasetSource> RelatedFieldDatasetSources => Set<RelatedFieldDatasetSource>();
 
         public ApplicationDbContext(
             DbContextOptions<ApplicationDbContext> options)
@@ -148,6 +151,60 @@ namespace SmartCareer.Web.Data
 
                 entity.HasIndex(source => new { source.SourceName, source.SourceVersion })
                     .IsUnique();
+            });
+
+            modelBuilder.Entity<DegreeField>(entity =>
+            {
+                entity.HasKey(field => field.DegreeFieldId);
+                entity.Property(field => field.CanonicalName).HasMaxLength(150).IsRequired();
+                entity.Property(field => field.ClassificationSystem).HasColumnType("varchar(20)").HasMaxLength(20).IsUnicode(false).IsRequired();
+                entity.Property(field => field.ClassificationCode).HasColumnType("varchar(20)").HasMaxLength(20).IsUnicode(false).IsRequired();
+                entity.Property(field => field.ClassificationVersion).HasColumnType("varchar(30)").HasMaxLength(30).IsUnicode(false).IsRequired();
+                entity.Property(field => field.Description).HasMaxLength(1000);
+                entity.Property(field => field.IsActive).HasDefaultValue(true);
+                entity.HasIndex(field => new { field.ClassificationSystem, field.ClassificationCode, field.ClassificationVersion }).IsUnique();
+            });
+
+            modelBuilder.Entity<RelatedFieldDatasetSource>(entity =>
+            {
+                entity.HasKey(source => source.RelatedFieldDatasetSourceId);
+                entity.Property(source => source.DatasetVersion).HasColumnType("varchar(20)").HasMaxLength(20).IsUnicode(false).IsRequired();
+                entity.Property(source => source.MappingFileName).HasMaxLength(200).IsRequired();
+                entity.Property(source => source.RetrievedOn).HasColumnType("date");
+                entity.Property(source => source.SourceMetadataJson).HasColumnType("nvarchar(max)").IsRequired();
+                entity.HasIndex(source => source.DatasetVersion).IsUnique();
+            });
+
+            modelBuilder.Entity<CareerDegreeField>(entity =>
+            {
+                entity.ToTable(table =>
+                {
+                    table.HasCheckConstraint("CK_CareerDegreeFields_RelationshipType", "[RelationshipType] IN ('Primary', 'Related', 'Alternative', 'Specialised')");
+                    table.HasCheckConstraint("CK_CareerDegreeFields_ConfidenceLevel", "[ConfidenceLevel] IN ('High', 'Medium', 'Low')");
+                    table.HasCheckConstraint("CK_CareerDegreeFields_ReviewStatus", "[ReviewStatus] IN ('Draft', 'In Review', 'Approved', 'Rejected', 'Needs Revalidation')");
+                    table.HasCheckConstraint("CK_CareerDegreeFields_Publication", "([ReviewStatus] = 'Approved' AND [ReviewedBy] IS NOT NULL AND [ApprovedAt] IS NOT NULL) OR ([ReviewStatus] <> 'Approved' AND [IsPublished] = 0 AND [ApprovedAt] IS NULL)");
+                });
+                entity.HasKey(mapping => mapping.CareerDegreeFieldId);
+                entity.Property(mapping => mapping.RelationshipType).HasColumnType("varchar(20)").HasMaxLength(20).IsUnicode(false).IsRequired();
+                entity.Property(mapping => mapping.ConfidenceLevel).HasColumnType("varchar(10)").HasMaxLength(10).IsUnicode(false).IsRequired();
+                entity.Property(mapping => mapping.ReviewStatus).HasColumnType("varchar(30)").HasMaxLength(30).IsUnicode(false).IsRequired();
+                entity.Property(mapping => mapping.EvidenceSummary).HasMaxLength(2000).IsRequired();
+                entity.Property(mapping => mapping.OriginalSocCode).HasColumnType("varchar(10)").HasMaxLength(10).IsUnicode(false).IsRequired();
+                entity.Property(mapping => mapping.OriginalCipCode).HasColumnType("varchar(10)").HasMaxLength(10).IsUnicode(false).IsRequired();
+                entity.Property(mapping => mapping.MalaysianNecCode).HasColumnType("varchar(10)").HasMaxLength(10).IsUnicode(false).IsRequired();
+                entity.Property(mapping => mapping.SourceUrls).HasColumnType("nvarchar(max)").IsRequired();
+                entity.Property(mapping => mapping.SourceVersions).HasMaxLength(1000).IsRequired();
+                entity.Property(mapping => mapping.ReviewDate).HasColumnType("date");
+                entity.Property(mapping => mapping.ReviewedBy).HasMaxLength(200);
+                entity.Property(mapping => mapping.ApprovedAt).HasColumnType("datetime2");
+                entity.Property(mapping => mapping.ReviewerNotes).HasMaxLength(2000).IsRequired();
+                entity.Property(mapping => mapping.RevalidationDueOn).HasColumnType("date");
+                entity.Property(mapping => mapping.IsPublished).HasDefaultValue(false);
+                entity.HasIndex(mapping => new { mapping.CareerId, mapping.DegreeFieldId }).IsUnique();
+                entity.HasIndex(mapping => new { mapping.ReviewStatus, mapping.IsPublished });
+                entity.HasOne(mapping => mapping.Career).WithMany(career => career.CareerDegreeFields).HasForeignKey(mapping => mapping.CareerId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(mapping => mapping.DegreeField).WithMany(field => field.CareerDegreeFields).HasForeignKey(mapping => mapping.DegreeFieldId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(mapping => mapping.DatasetSource).WithMany(source => source.CareerDegreeFields).HasForeignKey(mapping => mapping.RelatedFieldDatasetSourceId).OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<Skill>(entity =>

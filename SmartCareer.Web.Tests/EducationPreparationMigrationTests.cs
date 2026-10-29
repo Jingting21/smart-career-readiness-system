@@ -20,7 +20,7 @@ public sealed class EducationPreparationMigrationTests
         var snapshot = migrations.ModelSnapshot;
 
         Assert.NotNull(snapshot);
-        Assert.EndsWith("_AddEducationAndPreparationSchema", migrations.Migrations.Last().Key, StringComparison.Ordinal);
+        Assert.Contains(migrations.Migrations.Keys, key => key.EndsWith("_AddEducationAndPreparationSchema", StringComparison.Ordinal));
         Assert.NotNull(snapshot!.Model.FindEntityType(typeof(CareerEducationRating)));
         Assert.NotNull(snapshot.Model.FindEntityType(typeof(CareerTrainingRating)));
         Assert.NotNull(snapshot.Model.FindEntityType(typeof(JobZoneDefinition)));
