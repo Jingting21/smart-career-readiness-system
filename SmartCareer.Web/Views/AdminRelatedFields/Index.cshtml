@@ -1,0 +1,9 @@
+@model IReadOnlyList<SmartCareer.Web.Models.CareerDegreeField>
+@{ ViewData["Title"] = "Related Fields Review"; }
+<section class="admin-page">
+  <span class="eyebrow">Administrator workspace</span><h1>Related Fields Review</h1>
+  <p>Review and publication are separate controlled actions.</p>
+  <table class="table"><thead><tr><th>Career</th><th>Field</th><th>Status</th><th>Published</th><th></th></tr></thead><tbody>
+  @foreach (var item in Model) { <tr><td>@item.Career.Title</td><td>@item.DegreeField.CanonicalName</td><td>@item.ReviewStatus</td><td>@(item.IsPublished ? "Yes" : "No")</td><td><a asp-action="Details" asp-route-id="@item.CareerDegreeFieldId">Review</a></td></tr> }
+  </tbody></table>
+</section>

@@ -22,7 +22,9 @@ public sealed class CareerDegreeField
     public string ReviewerNotes { get; set; } = string.Empty;
     public DateOnly? RevalidationDueOn { get; set; }
     public bool IsPublished { get; set; }
+    public int ReviewRevision { get; set; }
     public Career Career { get; set; } = null!;
     public DegreeField DegreeField { get; set; } = null!;
     public RelatedFieldDatasetSource DatasetSource { get; set; } = null!;
+    public ICollection<CareerDegreeFieldReviewEvent> ReviewEvents { get; set; } = [];
 }

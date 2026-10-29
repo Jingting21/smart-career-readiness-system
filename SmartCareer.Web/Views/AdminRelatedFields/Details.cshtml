@@ -1,0 +1,14 @@
+@model SmartCareer.Web.ViewModels.RelatedFieldReviewDetailsViewModel
+@{ ViewData["Title"] = "Related Field Review"; var m = Model.Mapping; }
+<section class="admin-page">
+  <a asp-action="Index">Back to mappings</a><h1>@m.Career.Title — @m.DegreeField.CanonicalName</h1>
+  <p><strong>Status:</strong> @m.ReviewStatus · <strong>Published:</strong> @(m.IsPublished ? "Yes" : "No") · <strong>Revision:</strong> @m.ReviewRevision</p>
+  <p>@m.EvidenceSummary</p><p><strong>Sources:</strong> @m.SourceUrls</p>
+  <form asp-action="Review" method="post">
+    <input type="hidden" name="MappingId" value="@m.CareerDegreeFieldId"/><input type="hidden" name="ExpectedRevision" value="@m.ReviewRevision"/><input type="hidden" name="EvidenceFingerprint" value="@Model.EvidenceFingerprint"/>
+    <label for="Decision">Explicit decision</label><select id="Decision" name="Decision" required><option value="">Select</option><option value="Approve">Approve evidence</option><option value="Reject">Reject</option><option value="Needs Revalidation">Needs revalidation</option></select>
+    <label for="Rationale">Rationale</label><textarea id="Rationale" name="Rationale" required></textarea><button class="btn btn-primary" type="submit">Submit review</button>
+  </form>
+  @foreach (var action in new[] { "Approve", "Publish", "Unpublish" }) { <form asp-action="@action" method="post"><input type="hidden" name="MappingId" value="@m.CareerDegreeFieldId"/><input type="hidden" name="ExpectedRevision" value="@m.ReviewRevision"/><input type="hidden" name="EvidenceFingerprint" value="@Model.EvidenceFingerprint"/><label>Rationale for @action.ToLowerInvariant()</label><textarea name="Rationale" required></textarea><button class="btn btn-secondary" type="submit">@action</button></form> }
+  <h2>Audit history</h2><ol>@foreach (var item in m.ReviewEvents.OrderByDescending(item => item.OccurredAt)) { <li>@item.OccurredAt.ToString("u") — @item.EventType @item.Decision — @item.ActorUser.Email — @item.Rationale</li> }</ol>
+</section>

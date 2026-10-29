@@ -16,7 +16,7 @@ public sealed class RelatedFieldMigrationTests
         using var context = new ApplicationDbContext(options);
         var migrations = context.GetService<IMigrationsAssembly>();
 
-        Assert.EndsWith("_AddRelatedFieldsOfStudySchema", migrations.Migrations.Last().Key, StringComparison.Ordinal);
+        Assert.Contains(migrations.Migrations.Keys, key => key.EndsWith("_AddRelatedFieldsOfStudySchema", StringComparison.Ordinal));
         Assert.NotNull(migrations.ModelSnapshot!.Model.FindEntityType(typeof(DegreeField)));
         Assert.NotNull(migrations.ModelSnapshot.Model.FindEntityType(typeof(CareerDegreeField)));
         Assert.NotNull(migrations.ModelSnapshot.Model.FindEntityType(typeof(RelatedFieldDatasetSource)));

@@ -21,6 +21,7 @@ namespace SmartCareer.Web.Data
         public DbSet<DegreeField> DegreeFields => Set<DegreeField>();
         public DbSet<CareerDegreeField> CareerDegreeFields => Set<CareerDegreeField>();
         public DbSet<RelatedFieldDatasetSource> RelatedFieldDatasetSources => Set<RelatedFieldDatasetSource>();
+        public DbSet<CareerDegreeFieldReviewEvent> CareerDegreeFieldReviewEvents => Set<CareerDegreeFieldReviewEvent>();
 
         public ApplicationDbContext(
             DbContextOptions<ApplicationDbContext> options)
@@ -200,11 +201,36 @@ namespace SmartCareer.Web.Data
                 entity.Property(mapping => mapping.ReviewerNotes).HasMaxLength(2000).IsRequired();
                 entity.Property(mapping => mapping.RevalidationDueOn).HasColumnType("date");
                 entity.Property(mapping => mapping.IsPublished).HasDefaultValue(false);
+                entity.Property(mapping => mapping.ReviewRevision).HasDefaultValue(0).IsConcurrencyToken();
                 entity.HasIndex(mapping => new { mapping.CareerId, mapping.DegreeFieldId }).IsUnique();
                 entity.HasIndex(mapping => new { mapping.ReviewStatus, mapping.IsPublished });
                 entity.HasOne(mapping => mapping.Career).WithMany(career => career.CareerDegreeFields).HasForeignKey(mapping => mapping.CareerId).OnDelete(DeleteBehavior.Restrict);
                 entity.HasOne(mapping => mapping.DegreeField).WithMany(field => field.CareerDegreeFields).HasForeignKey(mapping => mapping.DegreeFieldId).OnDelete(DeleteBehavior.Restrict);
                 entity.HasOne(mapping => mapping.DatasetSource).WithMany(source => source.CareerDegreeFields).HasForeignKey(mapping => mapping.RelatedFieldDatasetSourceId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<CareerDegreeFieldReviewEvent>(entity =>
+            {
+                entity.ToTable(table =>
+                {
+                    table.HasCheckConstraint("CK_CareerDegreeFieldReviewEvents_EventType", "[EventType] IN ('ReviewSubmitted', 'Approved', 'Published', 'Unpublished')");
+                    table.HasCheckConstraint("CK_CareerDegreeFieldReviewEvents_Decision", "[Decision] IS NULL OR [Decision] IN ('Approve', 'Reject', 'Needs Revalidation')");
+                });
+                entity.HasKey(item => item.CareerDegreeFieldReviewEventId);
+                entity.Property(item => item.ActorUserId).HasMaxLength(450).IsRequired();
+                entity.Property(item => item.EventType).HasColumnType("varchar(30)").HasMaxLength(30).IsUnicode(false).IsRequired();
+                entity.Property(item => item.Decision).HasColumnType("varchar(30)").HasMaxLength(30).IsUnicode(false);
+                entity.Property(item => item.Rationale).HasMaxLength(2000).IsRequired();
+                entity.Property(item => item.EvidenceFingerprint).HasColumnType("char(64)").HasMaxLength(64).IsUnicode(false).IsRequired();
+                entity.Property(item => item.PreviousReviewStatus).HasColumnType("varchar(30)").HasMaxLength(30).IsUnicode(false).IsRequired();
+                entity.Property(item => item.NewReviewStatus).HasColumnType("varchar(30)").HasMaxLength(30).IsUnicode(false).IsRequired();
+                entity.Property(item => item.OccurredAt).HasColumnType("datetime2");
+                entity.HasIndex(item => new { item.CareerDegreeFieldId, item.OccurredAt });
+                entity.HasIndex(item => new { item.CareerDegreeFieldId, item.EventType, item.EvidenceFingerprint });
+                entity.HasOne(item => item.CareerDegreeField).WithMany(mapping => mapping.ReviewEvents)
+                    .HasForeignKey(item => item.CareerDegreeFieldId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(item => item.ActorUser).WithMany()
+                    .HasForeignKey(item => item.ActorUserId).OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<Skill>(entity =>
@@ -350,6 +376,24 @@ namespace SmartCareer.Web.Data
             entity.Property("SourceUpdatedOn").HasColumnType("date");
             entity.Property("DomainSource").HasMaxLength(50).IsRequired();
             entity.Property("SourceVersion").HasColumnType("varchar(20)").HasMaxLength(20).IsUnicode(false).IsRequired();
+        }
+
+        public override int SaveChanges(bool acceptAllChangesOnSuccess)
+        {
+            RejectAuditMutations();
+            return base.SaveChanges(acceptAllChangesOnSuccess);
+        }
+
+        public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+        {
+            RejectAuditMutations();
+            return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        }
+
+        private void RejectAuditMutations()
+        {
+            if (ChangeTracker.Entries<CareerDegreeFieldReviewEvent>().Any(entry => entry.State is EntityState.Modified or EntityState.Deleted))
+                throw new InvalidOperationException("Related-field review audit events are append-only.");
         }
     }
 }

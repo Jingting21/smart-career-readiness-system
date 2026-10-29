@@ -493,6 +493,12 @@ namespace SmartCareer.Web.Migrations
                     b.Property<DateOnly>("ReviewDate")
                         .HasColumnType("date");
 
+                    b.Property<int>("ReviewRevision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<string>("ReviewStatus")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -537,6 +543,87 @@ namespace SmartCareer.Web.Migrations
                             t.HasCheckConstraint("CK_CareerDegreeFields_RelationshipType", "[RelationshipType] IN ('Primary', 'Related', 'Alternative', 'Specialised')");
 
                             t.HasCheckConstraint("CK_CareerDegreeFields_ReviewStatus", "[ReviewStatus] IN ('Draft', 'In Review', 'Approved', 'Rejected', 'Needs Revalidation')");
+                        });
+                });
+
+            modelBuilder.Entity("SmartCareer.Web.Models.CareerDegreeFieldReviewEvent", b =>
+                {
+                    b.Property<long>("CareerDegreeFieldReviewEventId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("CareerDegreeFieldReviewEventId"));
+
+                    b.Property<string>("ActorUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("CareerDegreeFieldId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("CorrelationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Decision")
+                        .HasMaxLength(30)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<string>("EvidenceFingerprint")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("char(64)");
+
+                    b.Property<bool>("IsIndependentReview")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("NewIsPublished")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("NewReviewStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("PreviousIsPublished")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PreviousReviewStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<string>("Rationale")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.HasKey("CareerDegreeFieldReviewEventId");
+
+                    b.HasIndex("ActorUserId");
+
+                    b.HasIndex("CareerDegreeFieldId", "OccurredAt");
+
+                    b.HasIndex("CareerDegreeFieldId", "EventType", "EvidenceFingerprint");
+
+                    b.ToTable("CareerDegreeFieldReviewEvents", t =>
+                        {
+                            t.HasCheckConstraint("CK_CareerDegreeFieldReviewEvents_Decision", "[Decision] IS NULL OR [Decision] IN ('Approve', 'Reject', 'Needs Revalidation')");
+
+                            t.HasCheckConstraint("CK_CareerDegreeFieldReviewEvents_EventType", "[EventType] IN ('ReviewSubmitted', 'Approved', 'Published', 'Unpublished')");
                         });
                 });
 
@@ -1101,6 +1188,25 @@ namespace SmartCareer.Web.Migrations
                     b.Navigation("DegreeField");
                 });
 
+            modelBuilder.Entity("SmartCareer.Web.Models.CareerDegreeFieldReviewEvent", b =>
+                {
+                    b.HasOne("SmartCareer.Web.Models.ApplicationUser", "ActorUser")
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SmartCareer.Web.Models.CareerDegreeField", "CareerDegreeField")
+                        .WithMany("ReviewEvents")
+                        .HasForeignKey("CareerDegreeFieldId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ActorUser");
+
+                    b.Navigation("CareerDegreeField");
+                });
+
             modelBuilder.Entity("SmartCareer.Web.Models.CareerEducationRating", b =>
                 {
                     b.HasOne("SmartCareer.Web.Models.Career", "Career")
@@ -1190,6 +1296,11 @@ namespace SmartCareer.Web.Migrations
             modelBuilder.Entity("SmartCareer.Web.Models.CareerCategory", b =>
                 {
                     b.Navigation("Careers");
+                });
+
+            modelBuilder.Entity("SmartCareer.Web.Models.CareerDegreeField", b =>
+                {
+                    b.Navigation("ReviewEvents");
                 });
 
             modelBuilder.Entity("SmartCareer.Web.Models.DegreeField", b =>
