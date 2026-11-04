@@ -36,8 +36,8 @@
             <div class="career-search-field">
                 <label for="career-query">Search careers</label>
                 <input id="career-query" class="form-control" type="search" name="query" value="@Model.Query"
-                       maxlength="100" placeholder="Try software, finance or environment" aria-describedby="career-query-help career-query-error" />
-                <span id="career-query-help">Search by career title or keyword.</span>
+                       maxlength="100" placeholder="Try a career, category or keyword" aria-describedby="career-query-help career-query-error" />
+                <span id="career-query-help">Search by career title, description, or category.</span>
                 <span id="career-query-error" class="text-danger" asp-validation-for="Query"></span>
             </div>
             <button class="btn btn-primary" type="submit">Search</button>

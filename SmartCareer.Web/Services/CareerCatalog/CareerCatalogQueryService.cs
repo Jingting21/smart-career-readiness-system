@@ -52,10 +52,12 @@ public sealed class CareerCatalogQueryService(ApplicationDbContext dbContext) : 
 
         if (query is not null)
         {
+            var normalizedQuery = query.ToUpper();
             filteredCareers = filteredCareers.Where(career =>
-                career.Title.Contains(query) ||
-                career.SourceTitle.Contains(query) ||
-                career.Description.Contains(query));
+                career.Title.ToUpper().Contains(normalizedQuery) ||
+                career.SourceTitle.ToUpper().Contains(normalizedQuery) ||
+                career.Description.ToUpper().Contains(normalizedQuery) ||
+                career.Category.CategoryName.ToUpper().Contains(normalizedQuery));
         }
 
         var filteredCount = categoryExists

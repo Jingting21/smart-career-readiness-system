@@ -33,9 +33,9 @@ public sealed class CareerExplorerTests
         var result = await new CareerCatalogQueryService(context).GetExplorerAsync(null, null, 1);
 
         Assert.True(result.CategoryExists);
-        Assert.Equal(14, result.ViewModel.TotalActiveCareers);
-        Assert.Equal(14, result.ViewModel.FilteredCount);
-        Assert.Equal(2, result.ViewModel.Categories.Count);
+        Assert.Equal(27, result.ViewModel.TotalActiveCareers);
+        Assert.Equal(27, result.ViewModel.FilteredCount);
+        Assert.Equal(3, result.ViewModel.Categories.Count);
         Assert.DoesNotContain(result.ViewModel.Careers, career => career.Title == "Inactive career");
         Assert.DoesNotContain(result.ViewModel.Careers, career => career.Title == "Hidden category career");
     }
@@ -53,6 +53,78 @@ public sealed class CareerExplorerTests
         var career = Assert.Single(result.ViewModel.Careers);
         Assert.Equal(expectedTitle, career.Title);
         Assert.Equal(query, result.ViewModel.Query);
+    }
+
+    [Theory]
+    [InlineData("finance")]
+    [InlineData("Finance")]
+    [InlineData("FINANCE")]
+    public async Task SearchMatchesCategoryNameCaseInsensitively(string query)
+    {
+        await using var context = CreateContext();
+        SeedCatalogue(context);
+
+        var result = await new CareerCatalogQueryService(context).GetExplorerAsync(query, null, 1);
+
+        Assert.Equal(13, result.ViewModel.FilteredCount);
+        Assert.All(result.ViewModel.Careers,
+            career => Assert.Equal("Business, Finance and Management", career.CategoryName));
+    }
+
+    [Fact]
+    public async Task SearchSupportsPartialTitleAndTrimsWhitespace()
+    {
+        await using var context = CreateContext();
+        SeedCatalogue(context);
+
+        var result = await new CareerCatalogQueryService(context).GetExplorerAsync("  analy  ", null, 1);
+
+        var career = Assert.Single(result.ViewModel.Careers);
+        Assert.Equal("Data Analyst", career.Title);
+        Assert.Equal("analy", result.ViewModel.Query);
+    }
+
+    [Fact]
+    public async Task SearchAndCategoryFilterWorkTogether()
+    {
+        await using var context = CreateContext();
+        SeedCatalogue(context);
+
+        var result = await new CareerCatalogQueryService(context).GetExplorerAsync("finance", "finance", 1);
+
+        Assert.Equal(13, result.ViewModel.FilteredCount);
+        Assert.All(result.ViewModel.Careers, career => Assert.Equal("finance", career.CategorySlug));
+    }
+
+    [Fact]
+    public async Task SearchPreservesPaginationAndReturnsUniqueCareers()
+    {
+        await using var context = CreateContext();
+        SeedCatalogue(context);
+        var service = new CareerCatalogQueryService(context);
+
+        var first = await service.GetExplorerAsync("finance", null, 1);
+        var second = await service.GetExplorerAsync("finance", null, 2);
+        var allCodes = first.ViewModel.Careers.Concat(second.ViewModel.Careers)
+            .Select(career => career.OccupationCode).ToList();
+
+        Assert.Equal(2, first.ViewModel.TotalPages);
+        Assert.Equal(12, first.ViewModel.Careers.Count);
+        Assert.Single(second.ViewModel.Careers);
+        Assert.Equal(allCodes.Count, allCodes.Distinct(StringComparer.Ordinal).Count());
+    }
+
+    [Fact]
+    public async Task SearchWithNoMatchReturnsEmptyResult()
+    {
+        await using var context = CreateContext();
+        SeedCatalogue(context);
+
+        var result = await new CareerCatalogQueryService(context).GetExplorerAsync("not-a-real-career", null, 1);
+
+        Assert.Equal(0, result.ViewModel.FilteredCount);
+        Assert.Empty(result.ViewModel.Careers);
+        Assert.Equal(0, result.ViewModel.TotalPages);
     }
 
     [Fact]
@@ -84,9 +156,9 @@ public sealed class CareerExplorerTests
 
         Assert.Equal(1, first.ViewModel.CurrentPage);
         Assert.Equal(12, first.ViewModel.Careers.Count);
-        Assert.Equal(2, first.ViewModel.TotalPages);
-        Assert.Equal(2, last.ViewModel.CurrentPage);
-        Assert.Equal(2, last.ViewModel.Careers.Count);
+        Assert.Equal(3, first.ViewModel.TotalPages);
+        Assert.Equal(3, last.ViewModel.CurrentPage);
+        Assert.Equal(3, last.ViewModel.Careers.Count);
         Assert.Equal(
             last.ViewModel.Careers.OrderBy(career => career.Title).Select(career => career.Title),
             last.ViewModel.Careers.Select(career => career.Title));
@@ -177,7 +249,14 @@ public sealed class CareerExplorerTests
             DisplayOrder = 3,
             IsActive = false
         };
-        context.CareerCategories.AddRange(digital, science, hidden);
+        var finance = new CareerCategory
+        {
+            CategoryName = "Business, Finance and Management",
+            Slug = "finance",
+            DisplayOrder = 3,
+            IsActive = true
+        };
+        context.CareerCategories.AddRange(digital, science, finance, hidden);
 
         for (var index = 1; index <= 11; index++)
         {
@@ -195,6 +274,15 @@ public sealed class CareerExplorerTests
             science, "20-0002.00", "Environmental Scientist", "Environmental Scientists", "Studies marine habitats."));
         context.Careers.Add(CreateCareer(
             science, "20-0003.00", "Research Chemist", "Chemists", "Conducts laboratory research."));
+        for (var index = 1; index <= 13; index++)
+        {
+            context.Careers.Add(CreateCareer(
+                finance,
+                $"30-{index:0000}.00",
+                index == 1 ? "Budget Manager" : $"Management Career {index:00}",
+                index == 1 ? "Budget Managers" : $"Management Careers {index:00}",
+                "A sourced management career description."));
+        }
         context.Careers.Add(CreateCareer(
             digital, "10-9999.00", "Inactive career", "Inactive career", "Not visible.", false));
         context.Careers.Add(CreateCareer(
