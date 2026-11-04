@@ -9,8 +9,7 @@
         if (isVisible(field) && field.type !== "hidden") return field;
         const group = field?.closest("[data-controlled-selection]");
         if (!group) return null;
-        const mode = group.querySelector("[data-selection-mode]")?.value;
-        return group.querySelector(mode === "Other" ? "[data-custom-field] input" : "[data-catalog-field] input");
+        return group.querySelector("[data-autocomplete-url]");
     };
     const firstInvalidField = form => {
         const clientInvalid = Array.from(form.querySelectorAll(".input-validation-error, [aria-invalid='true']"))

@@ -28,6 +28,16 @@ public class ChangePasswordModel(UserManager<ApplicationUser> userManager, SignI
     {
         if (!ModelState.IsValid) return Page();
         var user = await userManager.GetUserAsync(User); if (user is null) return NotFound();
+        if (!await userManager.CheckPasswordAsync(user, Input.OldPassword))
+        {
+            ModelState.AddModelError("Input.OldPassword", "The current password is incorrect.");
+            return Page();
+        }
+        if (await userManager.CheckPasswordAsync(user, Input.NewPassword))
+        {
+            ModelState.AddModelError("Input.NewPassword", "Your new password must be different from your current password.");
+            return Page();
+        }
         var result = await userManager.ChangePasswordAsync(user, Input.OldPassword, Input.NewPassword);
         if (!result.Succeeded) { foreach (var error in result.Errors) ModelState.AddModelError(string.Empty, error.Description); return Page(); }
         await signInManager.RefreshSignInAsync(user);

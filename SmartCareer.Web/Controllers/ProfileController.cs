@@ -85,14 +85,10 @@ public sealed class ProfileController(UserManager<ApplicationUser> userManager, 
         FullName = user.FullName ?? string.Empty,
         Email = user.Email ?? string.Empty,
         EducationLevel = user.EducationLevel,
-        UniversitySelectionMode = hasUniversity ? SelectionModes.Catalog : SelectionModes.Other,
         UniversityConfirmed = hasUniversity,
-        University = university,
-        CustomUniversity = hasUniversity ? string.Empty : user.University ?? string.Empty,
-        CourseSelectionMode = hasCourse ? SelectionModes.Catalog : SelectionModes.Other,
+        University = hasUniversity ? university : user.University,
         CourseConfirmed = hasCourse,
-        Course = course,
-        CustomCourse = hasCourse ? string.Empty : user.Course ?? string.Empty
+        Course = hasCourse ? course : user.Course
         };
     }
 }

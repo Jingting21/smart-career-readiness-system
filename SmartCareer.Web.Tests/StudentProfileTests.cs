@@ -48,8 +48,6 @@ public sealed class StudentProfileTests
         Assert.NotEqual("Other Student", model.FullName);
         Assert.True(model.UniversityConfirmed);
         Assert.True(model.CourseConfirmed);
-        Assert.Equal(SelectionModes.Catalog, model.UniversitySelectionMode);
-        Assert.Equal(SelectionModes.Catalog, model.CourseSelectionMode);
     }
 
     [Fact]
@@ -64,14 +62,20 @@ public sealed class StudentProfileTests
     }
 
     [Fact]
-    public async Task ExistingManualValuesOpenAndSaveInOtherMode()
+    public async Task ExistingNonCatalogValuesAreDisplayedAndPreservedWithoutAutomaticChanges()
     {
         await using var provider = CreateProvider(); using var scope = provider.CreateScope();
         var manager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>(); var roles = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         var student = await CreateStudentAsync(manager, roles, "student@example.test", "Current Student"); student.University = "Custom Global Institute"; student.Course = "Applied Systems II"; await manager.UpdateAsync(student);
         var controller = CreateController(manager, student, scope.ServiceProvider); var get = Assert.IsType<ViewResult>(await controller.Index()); var model = Assert.IsType<StudentProfileViewModel>(get.Model);
-        Assert.Equal(SelectionModes.Other, model.UniversitySelectionMode); Assert.Equal("Custom Global Institute", model.CustomUniversity); Assert.Equal(SelectionModes.Other, model.CourseSelectionMode);
-        model.EducationLevel = EducationLevel.Foundation; Assert.IsType<RedirectToActionResult>(await controller.Index(model));
+        Assert.Equal("Custom Global Institute", model.University); Assert.False(model.UniversityConfirmed);
+        Assert.Equal("Applied Systems II", model.Course); Assert.False(model.CourseConfirmed);
+
+        model.EducationLevel = EducationLevel.Foundation;
+        Assert.IsType<ViewResult>(await controller.Index(model));
+        var unchanged = await manager.FindByIdAsync(student.Id);
+        Assert.Equal("Custom Global Institute", unchanged!.University);
+        Assert.Equal("Applied Systems II", unchanged.Course);
     }
 
     [Fact]
