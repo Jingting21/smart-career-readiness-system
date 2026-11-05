@@ -151,6 +151,18 @@ public sealed class CareerCatalogQueryService(ApplicationDbContext dbContext) : 
                 assignment.JobZoneDefinition.JobTraining))
             .SingleOrDefaultAsync(cancellationToken);
 
+        // Imported mappings are educational catalogue data; only active degree fields reach the public view model.
+        var relatedFieldCandidates = await dbContext.CareerDegreeFields.AsNoTracking()
+            .Where(mapping => mapping.CareerId == career.CareerId && mapping.DegreeField.IsActive)
+            .OrderBy(mapping => mapping.DegreeField.CanonicalName)
+            .ThenBy(mapping => mapping.DegreeField.DegreeFieldId)
+            .Select(mapping => new RelatedFieldOfStudyViewModel(
+                mapping.DegreeField.CanonicalName, mapping.DegreeField.Description))
+            .ToListAsync(cancellationToken);
+        var relatedFields = relatedFieldCandidates
+            .DistinctBy(field => field.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
         var source = await dbContext.CareerCatalogSources.AsNoTracking()
             .Where(item => item.SourceName == career.SourceName && item.SourceVersion == career.SourceVersion)
             .Select(item => new CareerProvenanceViewModel(item.SourceName, item.SourceVersion, item.OfficialSourceUrl,
@@ -174,6 +186,7 @@ public sealed class CareerCatalogQueryService(ApplicationDbContext dbContext) : 
                 .ToList(),
             RelatedWorkExperience = BuildTrainingDistribution(training, "RW", "Related Work Experience"),
             JobZone = jobZone,
+            RelatedFieldsOfStudy = relatedFields,
             ExplorerQuery = explorerQuery, ExplorerCategory = explorerCategory, ExplorerPage = Math.Max(1, explorerPage)
         };
     }

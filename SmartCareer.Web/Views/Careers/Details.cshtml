@@ -38,6 +38,22 @@
             </article>
         }
     </section>
+    <section class="career-detail-section related-fields" aria-labelledby="related-fields-heading">
+        <h2 id="related-fields-heading">Related Fields of Study</h2>
+        <p class="related-fields-disclaimer">These fields of study may be relevant to this career. Actual education requirements may vary by employer and location.</p>
+        @if (Model.RelatedFieldsOfStudy.Count == 0) {
+            <p class="related-fields-empty" role="status">No related fields of study are available for this career yet.</p>
+        }
+        else {
+            <ul class="related-fields-list">
+                @foreach (var field in Model.RelatedFieldsOfStudy) {
+                    <li><h3>@field.Name</h3>
+                        @if (!string.IsNullOrWhiteSpace(field.Description)) { <p>@field.Description</p> }
+                    </li>
+                }
+            </ul>
+        }
+    </section>
     @if (!string.IsNullOrWhiteSpace(Model.Responsibilities)) { <section class="career-detail-section"><h2>Responsibilities</h2><p class="pre-line">@Model.Responsibilities</p></section> }
     @if (!string.IsNullOrWhiteSpace(Model.Qualifications)) { <section class="career-detail-section"><h2>Qualifications</h2><p class="pre-line">@Model.Qualifications</p></section> }
     <section class="career-detail-section career-skills" aria-labelledby="skills-heading"><h2 id="skills-heading">Associated Skills</h2>

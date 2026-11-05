@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using SmartCareer.Web.Security;
 using SmartCareer.Web.Services.CareerCatalog;
-using SmartCareer.Web.Services.RelatedFields;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -63,7 +62,6 @@ builder.Services.AddScoped<StudentPasswordRecoveryService>();
 builder.Services.AddScoped<StudentEmailVerificationService>();
 builder.Services.AddScoped<ICareerCatalogQueryService, CareerCatalogQueryService>();
 builder.Services.AddSingleton(TimeProvider.System);
-builder.Services.AddScoped<RelatedFieldReviewService>();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;

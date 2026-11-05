@@ -17,6 +17,7 @@ public sealed class CareerDetailsViewModel
     public IReadOnlyList<PreparationDistributionViewModel> EducationBackgrounds { get; init; } = [];
     public PreparationDistributionViewModel? RelatedWorkExperience { get; init; }
     public JobZoneViewModel? JobZone { get; init; }
+    public IReadOnlyList<RelatedFieldOfStudyViewModel> RelatedFieldsOfStudy { get; init; } = [];
     public bool HasEducationOrExperience => EducationBackgrounds.Count > 0 || RelatedWorkExperience is not null;
     public string? ExplorerQuery { get; init; }
     public string? ExplorerCategory { get; init; }
@@ -37,6 +38,8 @@ public sealed record PreparationDistributionViewModel(
 
 public sealed record JobZoneViewModel(
     int Number, string Name, string Education, string Experience, string JobTraining);
+
+public sealed record RelatedFieldOfStudyViewModel(string Name, string? Description);
 
 public sealed record CareerProvenanceViewModel(
     string SourceName, string SourceVersion, string OfficialSourceUrl, string LicenseName,
